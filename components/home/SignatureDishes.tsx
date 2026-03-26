@@ -45,17 +45,18 @@ export default function SignatureDishes() {
             </p>
           </div>
 
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ backgroundColor: "#ffffff10" }}
             onClick={() => setOpen(true)}
-            className="border border-white/20 px-4 py-2 rounded-full text-sm hover:bg-white/10 transition w-fit"
+            className="border border-white/20 px-4 py-2 rounded-full text-sm transition w-fit"
           >
             View all
-          </button>
+          </motion.button>
         </div>
 
         {/* CAROUSEL */}
         <div className="relative">
-
           <div
             ref={scrollRef}
             className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth no-scrollbar pb-2"
@@ -64,11 +65,15 @@ export default function SignatureDishes() {
               <motion.div
                 key={i}
                 whileHover={{ y: -8 }}
+                whileTap={{ y: -4, scale: 0.97 }} // ✅ MOBILE
                 className="min-w-[220px] sm:min-w-[260px] md:min-w-[280px] flex-shrink-0"
               >
                 <div className="relative h-[180px] sm:h-[220px] rounded-2xl overflow-hidden mb-3">
+
+                  {/* IMAGE ANIMATION */}
                   <motion.div
                     whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 1.05 }} // ✅ MOBILE
                     transition={{ duration: 0.5 }}
                     className="w-full h-full"
                   >
@@ -92,8 +97,9 @@ export default function SignatureDishes() {
 
                 <p className="text-xs text-gray-400 mb-3">Variant</p>
 
+                {/* BUTTON */}
                 <motion.button
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.92 }}
                   whileHover={{
                     backgroundColor: "#ff7a00",
                     color: "#fff",
@@ -106,20 +112,23 @@ export default function SignatureDishes() {
             ))}
           </div>
 
-          {/* CONTROLS (hide on small screens) */}
+          {/* CONTROLS */}
           <div className="hidden md:flex justify-end gap-3 mt-6">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={() => scroll("left")}
               className="bg-white text-black p-3 rounded-lg"
             >
               <ArrowLeft size={18} />
-            </button>
-            <button
+            </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.9 }}
               onClick={() => scroll("right")}
               className="bg-white text-black p-3 rounded-lg"
             >
               <ArrowRight size={18} />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -146,12 +155,13 @@ export default function SignatureDishes() {
                 className="bg-[#111] w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6 relative"
                 onClick={(e) => e.stopPropagation()}
               >
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.8 }}
                   onClick={() => setOpen(false)}
                   className="absolute top-3 right-3 text-white/70"
                 >
                   <X />
-                </button>
+                </motion.button>
 
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
                   All Signature Dishes
@@ -162,6 +172,7 @@ export default function SignatureDishes() {
                     <motion.div
                       key={i}
                       whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.97 }} // ✅ MOBILE
                       className="bg-[#1a1a1a] p-3 sm:p-4 rounded-xl"
                     >
                       <div className="relative h-[120px] sm:h-[140px] rounded-lg overflow-hidden mb-2">

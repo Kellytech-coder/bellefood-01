@@ -5,7 +5,7 @@ import WhyChoose from "@/components/home/WhyChoose";
 import SignatureDishes from "@/components/home/SignatureDishes";
 import Platters from "@/components/home/Platters";
 import Testimonials from "@/components/home/Testimonials";
-// import CTA from "@/components/home/CTA";
+import CTA from "@/components/home/CTA";
 
 export default function Home() {
   return (
@@ -17,7 +17,7 @@ export default function Home() {
       <SignatureDishes />
       <Platters />
       <Testimonials />
-      {/* <CTA /> */}
+      <CTA />
     </>
   );
 }

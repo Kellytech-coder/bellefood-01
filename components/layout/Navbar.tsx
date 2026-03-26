@@ -52,7 +52,7 @@ export default function Navbar() {
               <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
                 Belle
               </span>
-              <span className="text-black">FOOD</span>
+              <span className="text-orange-600">FOOD</span>
             </span>
           </div>
 

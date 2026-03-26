@@ -89,23 +89,25 @@ export default function WhyChoose() {
                   type: "spring",
                   stiffness: 120,
                 }}
-                whileHover={{
-                  y: -8,
-                  scale: 1.03,
-                }}
+                whileHover={{ y: -8, scale: 1.03 }}
+                whileTap={{ y: -4, scale: 0.98 }} // ✅ MOBILE
                 className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-orange-500/40 to-transparent"
               >
                 {/* Glow */}
-                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg bg-orange-500/20 transition duration-500" />
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 group-active:opacity-100 blur-lg bg-orange-500/20 transition duration-500" />
 
                 {/* Card */}
-                <div className="relative bg-[#121212] rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between border border-white/5 group-hover:border-orange-500/30 transition">
+                <div className="relative bg-[#121212] rounded-2xl p-5 sm:p-6 h-full flex flex-col justify-between border border-white/5 group-hover:border-orange-500/30 group-active:border-orange-500/30 transition">
 
                   {/* Icon */}
                   <motion.div
                     whileHover={{
                       rotate: [0, -8, 8, 0],
                       scale: 1.15,
+                    }}
+                    whileTap={{
+                      rotate: [0, -6, 6, 0], // ✅ MOBILE
+                      scale: 1.1,
                     }}
                     transition={{ duration: 0.5 }}
                     className="text-orange-500 mb-4"
@@ -128,6 +130,7 @@ export default function WhyChoose() {
                     className="absolute bottom-0 left-0 h-[2px] bg-orange-500"
                     initial={{ width: 0 }}
                     whileHover={{ width: "100%" }}
+                    whileTap={{ width: "100%" }} // ✅ MOBILE
                     transition={{ duration: 0.4 }}
                   />
                 </div>

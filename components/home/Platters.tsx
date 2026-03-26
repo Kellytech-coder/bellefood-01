@@ -58,9 +58,10 @@ export default function Platters() {
                 key={i}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
+                whileTap={{ scale: 0.97, x: 4 }} // ✅ MOBILE
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 + i * 0.15 }}
-                className="flex items-start gap-3"
+                className="flex items-start gap-3 cursor-pointer"
               >
                 <div className="w-2 h-2 bg-orange-500 rounded-full mt-2" />
                 <p className="text-white/80 text-sm sm:text-base">
@@ -72,13 +73,27 @@ export default function Platters() {
 
           {/* BUTTONS */}
           <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <button className="flex items-center justify-center gap-2 bg-orange-500 text-white px-5 py-3 rounded-full hover:bg-orange-600 transition text-sm sm:text-base">
-              Order Now <ArrowRight size={18} />
-            </button>
 
-            <button className="border border-white/30 text-white px-5 py-3 rounded-full hover:bg-white/10 transition text-sm sm:text-base">
+            {/* PRIMARY BUTTON */}
+            <motion.button
+              whileTap={{ scale: 0.94 }} // ✅ MOBILE
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center justify-center gap-2 bg-orange-500 text-white px-5 py-3 rounded-full text-sm sm:text-base"
+            >
+              Order Now <ArrowRight size={18} />
+            </motion.button>
+
+            {/* SECONDARY BUTTON */}
+            <motion.button
+              whileTap={{ scale: 0.94 }} // ✅ MOBILE
+              whileHover={{
+                backgroundColor: "#ffffff10",
+                scale: 1.05,
+              }}
+              className="border border-white/30 text-white px-5 py-3 rounded-full text-sm sm:text-base"
+            >
               Learn More
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -86,16 +101,24 @@ export default function Platters() {
         <motion.div
           initial={{ opacity: 0, x: 60 }}
           whileInView={{ opacity: 1, x: 0 }}
+          whileTap={{ scale: 0.98 }} // ✅ MOBILE
           viewport={{ once: true }}
           className="relative w-full h-[260px] sm:h-[320px] md:h-[520px]"
         >
-          <Image
-            src="/images/platter1.png"
-            alt="platter"
-            fill
-            className="object-cover rounded-2xl"
-            priority
-          />
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 1.03 }} // ✅ MOBILE
+            transition={{ duration: 0.5 }}
+            className="w-full h-full"
+          >
+            <Image
+              src="/images/platter1.png"
+              alt="platter"
+              fill
+              className="object-cover rounded-2xl"
+              priority
+            />
+          </motion.div>
         </motion.div>
 
       </div>
