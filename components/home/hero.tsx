@@ -137,37 +137,41 @@ export default function Hero() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-full border border-white/20 w-fit backdrop-blur-md">
+           <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-full border border-white/20 w-fit backdrop-blur-md">
 
-              {/* ✅ Avatars (FIXED) */}
-              <div className="flex -space-x-2">
-                {avatars.map((src, index) => (
-                  <div
-                    key={index}
-                    className="relative w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white overflow-hidden hover:scale-105 transition"
-                  >
-                    <Image
-                      src={src}
-                      alt={`user-${index}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
+  {/* Avatars */}
+  <div className="flex -space-x-2">
+    {avatars.map((src, index) => (
+      <div
+        key={index}
+        className="relative w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white overflow-hidden"
+      >
+        <Image
+          src={src}
+          alt={`user-${index}`}
+          fill
+          className="object-cover"
+        />
+      </div>
+    ))}
+  </div>
 
-              {/* Stars */}
-              <div className="flex text-yellow-400">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} size={13} fill="currentColor" />
-                ))}
-              </div>
+  {/* ⭐ Responsive Stack */}
+  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 leading-tight">
 
-              {/* Rating */}
-              <span className="text-xs md:text-sm text-gray-200 font-semibold">
-                {rating.toFixed(1)} (165K+ reviews)
-              </span>
-            </div>
+    {/* Stars */}
+    <div className="flex text-yellow-400 justify-center sm:justify-start">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={13} fill="currentColor" />
+      ))}
+    </div>
+
+    {/* Rating */}
+    <span className="text-xs md:text-sm text-gray-200 font-semibold text-center sm:text-left">
+      {rating.toFixed(1)} (165K+ reviews)
+    </span>
+  </div>
+</div>
           </motion.div>
 
         </div>
