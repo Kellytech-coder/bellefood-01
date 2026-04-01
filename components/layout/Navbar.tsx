@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image"; // ✅ FIXED
 import {
   ShoppingCart,
   ChevronDown,
@@ -45,23 +46,24 @@ export default function Navbar() {
               : "bg-white shadow-md border-transparent"
           }`}
         >
-          {/* LOGO */}
-          <div className="flex items-center gap-2 cursor-pointer">
-            <span>🍴</span>
-            <span className="text-lg md:text-2xl font-extrabold">
-              <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-                Belle
-              </span>
-              <span className="text-orange-600">FOOD</span>
-            </span>
+          {/* ✅ LOGO */}
+          <div className="flex items-center">
+              <Image
+                src="/images/logo1.png"
+                alt="BelleFood Logo"
+                width={120}
+                height={40}
+                priority
+                className="object-contain w-[95px] md:w-[115px] h-auto"
+              />
           </div>
 
           {/* DESKTOP NAV */}
-          <div className="hidden md:flex items-center gap-8 text-base font-semibold text-gray-700">
+          <div className="hidden md:flex items-center gap-5 text-sm font-semibold text-gray-700">
             {navItems.map((item) => (
               <div
                 key={item}
-                className="relative px-2 py-1"
+                className="relative px-1 py-1"
                 onMouseEnter={() => setHovered(item)}
                 onMouseLeave={() => setHovered(null)}
               >
@@ -78,7 +80,7 @@ export default function Navbar() {
                       ? ""
                       : item.toLowerCase().replace(" ", "")
                   }`}
-                  className={`relative z-10 px-5 py-2 rounded-full ${
+                  className={`relative z-10 px-3 py-1.5 rounded-full transition ${
                     hovered === item ? "text-white" : "text-gray-700"
                   }`}
                 >
@@ -87,27 +89,27 @@ export default function Navbar() {
               </div>
             ))}
 
-            <div className="flex items-center gap-1 cursor-pointer">
-              Services <ChevronDown size={16} />
+            <div className="flex items-center gap-1 cursor-pointer text-sm">
+              Services <ChevronDown size={14} />
             </div>
           </div>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-3">
-            {/* Contact (desktop only) */}
+          <div className="flex items-center gap-2">
+            {/* Contact */}
             <Link
               href="/contact"
-              className="hidden md:block border px-4 py-2 rounded-full text-sm"
+              className="hidden md:block border px-3 py-1.5 rounded-full text-sm"
             >
               Contact
             </Link>
 
             {/* Cart */}
-            <button className="bg-orange-500 text-white p-2.5 md:p-3 rounded-full">
-              <ShoppingCart size={18} />
+            <button className="bg-orange-500 text-white p-2.5 rounded-full">
+              <ShoppingCart size={17} />
             </button>
 
-            {/* MOBILE MENU BUTTON */}
+            {/* Mobile Menu */}
             <button
               onClick={() => setMobileOpen(true)}
               className="md:hidden p-2"
@@ -134,7 +136,7 @@ export default function Navbar() {
               transition={{ type: "spring", stiffness: 120 }}
               className="bg-white w-full p-6 rounded-b-3xl"
             >
-              {/* TOP BAR */}
+              {/* TOP */}
               <div className="flex justify-between items-center mb-6">
                 <span className="text-xl font-bold">Menu</span>
                 <button onClick={() => setMobileOpen(false)}>

@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import { motion, Variants } from "framer-motion";
-import { Utensils } from "lucide-react";
 
 import {
   FaFacebookF,
@@ -20,7 +20,7 @@ export default function Footer() {
       transition: {
         staggerChildren: 0.15,
         duration: 0.8,
-        ease: "easeOut" as const,
+        ease: "easeOut",
       },
     },
   };
@@ -44,10 +44,10 @@ export default function Footer() {
   return (
     <footer className="relative w-full bg-gradient-to-b from-[#0B0F0E] to-black text-white pt-16 md:pt-20 pb-10 px-4 sm:px-6 md:px-12 overflow-hidden">
 
-      {/* Glow Background Effect */}
+      {/* Glow Background */}
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-orange-500/20 blur-[120px] md:blur-[140px] rounded-full" />
 
-      {/* Main Container */}
+      {/* MAIN */}
       <motion.div
         variants={container}
         initial="hidden"
@@ -56,13 +56,22 @@ export default function Footer() {
         className="max-w-7xl mx-auto bg-white text-black rounded-2xl p-6 sm:p-8 md:p-14 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 shadow-2xl"
       >
 
-        {/* LEFT SECTION */}
+        {/* LEFT */}
         <motion.div variants={item} className="space-y-5 md:space-y-6">
-          <div className="flex items-center gap-2 text-orange-500 font-bold text-base md:text-lg">
-            <Utensils size={20} />
-            <span>BelleFOOD</span>
-          </div>
 
+          {/* ✅ LOGO */}
+          <motion.div whileHover={{ scale: 1.05 }} className="w-fit">
+            <Image
+              src="/images/logo1.png" // 👈 make sure this exists
+              alt="BelleFood Logo"
+              width={140}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          </motion.div>
+
+          {/* ADDRESS */}
           <div>
             <h4 className="font-semibold mb-1 text-sm md:text-base">Address:</h4>
             <p className="text-xs md:text-sm text-gray-700 leading-relaxed">
@@ -70,13 +79,14 @@ export default function Footer() {
             </p>
           </div>
 
+          {/* CONTACT */}
           <div>
             <h4 className="font-semibold mb-1 text-sm md:text-base">Contact:</h4>
             <p className="text-xs md:text-sm text-gray-700">1800 123 4567</p>
             <p className="text-xs md:text-sm text-gray-700">email@example.com</p>
           </div>
 
-          {/* Social Icons */}
+          {/* SOCIALS */}
           <div className="flex items-center gap-3 md:gap-4 pt-3 md:pt-4">
             {socials.map((Icon, i) => (
               <motion.div
@@ -91,7 +101,7 @@ export default function Footer() {
           </div>
         </motion.div>
 
-        {/* LINKS COLUMN 1 */}
+        {/* LINKS 1 */}
         <motion.div variants={item} className="space-y-2 md:space-y-3">
           {links1.map((link, i) => (
             <motion.p
@@ -105,7 +115,7 @@ export default function Footer() {
           ))}
         </motion.div>
 
-        {/* LINKS COLUMN 2 */}
+        {/* LINKS 2 */}
         <motion.div variants={item} className="space-y-2 md:space-y-3">
           {links2.map((link, i) => (
             <motion.p
@@ -120,7 +130,7 @@ export default function Footer() {
         </motion.div>
       </motion.div>
 
-      {/* Bottom Bar */}
+      {/* BOTTOM */}
       <div className="max-w-7xl mx-auto mt-8 md:mt-10 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-400 text-center md:text-left">
         <p>© 2024 Relume. All rights reserved.</p>
 

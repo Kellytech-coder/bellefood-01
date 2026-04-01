@@ -6,11 +6,56 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useRef, useState } from "react";
 
 const dishes = [
-  { name: "Jollof Rice & Chicken", price: 55, image: "/images/sign1.png" },
-  { name: "Fried Rice Special", price: 55, image: "/images/sign2.png" },
-  { name: "Grilled Chicken Plate", price: 55, image: "/images/sign3.png" },
-  { name: "Ofada Rice Combo", price: 55, image: "/images/sign4.png" },
-  { name: "Amala & Ewedu", price: 55, image: "/images/amala1.jpg" },
+  {
+    name: "Fried Rice",
+    price: 5500,
+    desc: "Spicy tomato sauce rice with our signature seasoning",
+    image: "/images/sign1.png",
+  },
+  {
+    name: "Party Jollof Rice",
+    price: 5500,
+    desc: "Smoky jollof rice with grilled chicken & plantain",
+    image: "/images/sign2.png",
+  },
+  {
+    name: "Asun Rice",
+    price: 5500,
+    desc: "Rice served with spicy goat meat (asun)",
+    image: "/images/sign3.png",
+  },
+  {
+    name: "Noodles and Turkey",
+    price: 5500,
+    desc: "Stir-fried noodles with grilled turkey",
+    image: "/images/sign5.png",
+  },
+
+  // ✅ NEW ITEMS
+  {
+    name: "Ofada Rice & Sauce",
+    price: 6000,
+    desc: "Local Ofada rice with spicy ayamase sauce",
+    image: "/images/sign4.png",
+  },
+  {
+    name: "Amala & Ewedu",
+    price: 5000,
+    desc: "Soft amala served with ewedu and gbegiri soup",
+    image: "/images/sign8.png",
+  },
+  {
+    name: "Peppered Chicken",
+    price: 6500,
+    desc: "Grilled chicken tossed in spicy pepper sauce",
+    image: "/images/sign7.png",
+  },
+  {
+    name: "Goat Meat Pepper Soup",
+    price: 7000,
+    desc: "Hot and spicy goat meat pepper soup",
+    image: "/images/sign6.png",
+  },
 ];
 
 export default function SignatureDishes() {
@@ -28,107 +73,90 @@ export default function SignatureDishes() {
   };
 
   return (
-    <section className="bg-[#0e0f11] py-16 md:py-20 px-4 sm:px-6 text-white overflow-hidden">
+    <section className="bg-[#0e0f11] py-16 px-4 text-white">
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10 gap-4">
+        <div className="flex justify-between items-end mb-10">
           <div>
-            <p className="text-gray-400 mb-2 text-sm">Featured</p>
+            <p className="text-gray-400 text-sm mb-2">Featured</p>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            <h2 className="text-4xl md:text-5xl font-bold">
               Signature <span className="text-orange-500">Dishes</span>
             </h2>
 
-            <p className="text-gray-400 mt-2 text-sm sm:text-base">
+            <p className="text-gray-400 mt-2">
               Our most loved meals.
             </p>
           </div>
 
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ backgroundColor: "#ffffff10" }}
+          <button
             onClick={() => setOpen(true)}
-            className="border border-white/20 px-4 py-2 rounded-full text-sm transition w-fit"
+            className="border border-white/20 px-4 py-2 rounded-full text-sm hover:bg-white/10"
           >
             View all
-          </motion.button>
+          </button>
         </div>
 
         {/* CAROUSEL */}
         <div className="relative">
           <div
             ref={scrollRef}
-            className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth no-scrollbar pb-2"
+            className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
           >
             {dishes.map((dish, i) => (
               <motion.div
                 key={i}
-                whileHover={{ y: -8 }}
-                whileTap={{ y: -4, scale: 0.97 }} // ✅ MOBILE
-                className="min-w-[220px] sm:min-w-[260px] md:min-w-[280px] flex-shrink-0"
+                whileHover={{ y: -6 }}
+                className="min-w-[260px] md:min-w-[300px]"
               >
-                <div className="relative h-[180px] sm:h-[220px] rounded-2xl overflow-hidden mb-3">
-
-                  {/* IMAGE ANIMATION */}
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 1.05 }} // ✅ MOBILE
-                    transition={{ duration: 0.5 }}
-                    className="w-full h-full"
-                  >
-                    <Image
-                      src={dish.image}
-                      alt={dish.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </motion.div>
+                {/* IMAGE */}
+                <div className="h-[200px] rounded-xl overflow-hidden mb-4">
+                  <Image
+                    src={dish.image}
+                    alt={dish.name}
+                    width={400}
+                    height={300}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
-                <div className="flex justify-between items-center mb-1">
-                  <h3 className="font-semibold text-sm sm:text-base">
-                    {dish.name}
-                  </h3>
-                  <span className="font-bold text-sm sm:text-base">
-                    ${dish.price}
-                  </span>
-                </div>
+                {/* TEXT */}
+                <h3 className="font-semibold text-lg mb-1">
+                  {dish.name}
+                </h3>
 
-                <p className="text-xs text-gray-400 mb-3">Variant</p>
+                <p className="text-gray-400 text-sm mb-3">
+                  {dish.desc}
+                </p>
+
+                <p className="text-green-500 font-bold text-lg mb-3">
+                  ₦{dish.price.toLocaleString()}
+                </p>
 
                 {/* BUTTON */}
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  whileHover={{
-                    backgroundColor: "#ff7a00",
-                    color: "#fff",
-                  }}
-                  className="w-full border border-white/20 py-2 rounded-full text-xs sm:text-sm"
-                >
-                  Add to cart
-                </motion.button>
+                <button className="w-full bg-orange-500 hover:bg-orange-600 transition py-2 rounded-full text-sm font-medium">
+                  Add to Cart
+                </button>
               </motion.div>
             ))}
           </div>
 
           {/* CONTROLS */}
           <div className="hidden md:flex justify-end gap-3 mt-6">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={() => scroll("left")}
               className="bg-white text-black p-3 rounded-lg"
             >
               <ArrowLeft size={18} />
-            </motion.button>
+            </button>
 
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={() => scroll("right")}
               className="bg-white text-black p-3 rounded-lg"
             >
               <ArrowRight size={18} />
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>
@@ -138,57 +166,41 @@ export default function SignatureDishes() {
         {open && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 z-50"
               onClick={() => setOpen(false)}
             />
 
-            <motion.div
-              className="fixed inset-0 z-50 flex items-center justify-center px-4"
-              initial={{ opacity: 0, scale: 0.9, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 40 }}
-            >
-              <div
-                className="bg-[#111] w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6 relative"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <motion.button
-                  whileTap={{ scale: 0.8 }}
+            <motion.div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+              <div className="bg-[#111] max-w-5xl w-full p-6 rounded-xl relative">
+                <button
                   onClick={() => setOpen(false)}
-                  className="absolute top-3 right-3 text-white/70"
+                  className="absolute top-3 right-3"
                 >
                   <X />
-                </motion.button>
+                </button>
 
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+                <h3 className="text-2xl font-bold mb-6">
                   All Signature Dishes
                 </h3>
 
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   {dishes.map((dish, i) => (
-                    <motion.div
-                      key={i}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.97 }} // ✅ MOBILE
-                      className="bg-[#1a1a1a] p-3 sm:p-4 rounded-xl"
-                    >
-                      <div className="relative h-[120px] sm:h-[140px] rounded-lg overflow-hidden mb-2">
+                    <div key={i}>
+                      <div className="h-[140px] rounded-lg overflow-hidden mb-2">
                         <Image
                           src={dish.image}
                           alt={dish.name}
-                          fill
-                          className="object-cover"
+                          width={300}
+                          height={200}
+                          className="w-full h-full object-cover"
                         />
                       </div>
 
-                      <div className="flex justify-between text-xs sm:text-sm">
+                      <div className="flex justify-between text-sm">
                         <span>{dish.name}</span>
-                        <span>${dish.price}</span>
+                        <span>₦{dish.price.toLocaleString()}</span>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>

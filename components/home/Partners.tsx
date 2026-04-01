@@ -34,7 +34,7 @@ export default function Partners() {
   return (
     <section className="relative bg-[#071311] py-16 md:py-24 overflow-hidden">
 
-      {/* TEXT */}
+      {/* TEXT (container removed; only text visible) */}
       <motion.div
         initial={{ opacity: 0, x: -40 }}
         whileInView={{ opacity: 1, x: 0 }}
@@ -45,13 +45,11 @@ export default function Partners() {
           z-30 px-4 md:pl-6 mb-10 md:mb-0
         "
       >
-        <div className="backdrop-blur-md bg-white/5 border border-white/10 px-5 py-4 md:px-6 md:py-5 rounded-2xl shadow-xl max-w-xs md:max-w-sm">
-          <h3 className="text-lg md:text-2xl font-semibold text-gray-200 leading-snug">
-            Partnering with top leading
-            <br />
-            companies in Nigeria
-          </h3>
-        </div>
+        <h3 className="text-lg md:text-2xl font-semibold text-gray-200 leading-snug">
+          Partnering with top leading
+          <br />
+          companies in Nigeria
+        </h3>
       </motion.div>
 
       {/* LEFT MASK */}
