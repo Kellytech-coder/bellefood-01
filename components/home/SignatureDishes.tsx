@@ -30,8 +30,6 @@ const dishes = [
     desc: "Stir-fried noodles with grilled turkey",
     image: "/images/sign5.png",
   },
-
-  // ✅ NEW ITEMS
   {
     name: "Ofada Rice & Sauce",
     price: 6000,
@@ -73,26 +71,26 @@ export default function SignatureDishes() {
   };
 
   return (
-    <section className="bg-[#0e0f11] py-16 px-4 text-white">
+    <section className="bg-[#0e0f11] py-12 sm:py-16 px-4 sm:px-6 text-white">
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <div className="flex justify-between items-end mb-10">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 sm:mb-10">
           <div>
-            <p className="text-gray-400 text-sm mb-2">Featured</p>
+            <p className="text-gray-400 text-xs sm:text-sm mb-2">Featured</p>
 
-            <h2 className="text-4xl md:text-5xl font-bold">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold">
               Signature <span className="text-orange-500">Dishes</span>
             </h2>
 
-            <p className="text-gray-400 mt-2">
+            <p className="text-gray-400 mt-2 text-sm sm:text-base">
               Our most loved meals.
             </p>
           </div>
 
           <button
             onClick={() => setOpen(true)}
-            className="border border-white/20 px-4 py-2 rounded-full text-sm hover:bg-white/10"
+            className="border border-white/20 px-4 py-2 rounded-full text-xs sm:text-sm hover:bg-white/10 w-fit"
           >
             View all
           </button>
@@ -102,16 +100,17 @@ export default function SignatureDishes() {
         <div className="relative">
           <div
             ref={scrollRef}
-            className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
+            className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar pb-4"
           >
             {dishes.map((dish, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -6 }}
-                className="min-w-[260px] md:min-w-[300px]"
+                whileTap={{ scale: 0.97 }}
+                className="min-w-[220px] sm:min-w-[260px] md:min-w-[300px] snap-start"
               >
                 {/* IMAGE */}
-                <div className="h-[200px] rounded-xl overflow-hidden mb-4">
+                <div className="h-[160px] sm:h-[200px] rounded-xl overflow-hidden mb-3 sm:mb-4">
                   <Image
                     src={dish.image}
                     alt={dish.name}
@@ -122,20 +121,20 @@ export default function SignatureDishes() {
                 </div>
 
                 {/* TEXT */}
-                <h3 className="font-semibold text-lg mb-1">
+                <h3 className="font-semibold text-sm sm:text-lg mb-1">
                   {dish.name}
                 </h3>
 
-                <p className="text-gray-400 text-sm mb-3">
+                <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
                   {dish.desc}
                 </p>
 
-                <p className="text-green-500 font-bold text-lg mb-3">
+                <p className="text-green-500 font-bold text-sm sm:text-lg mb-3">
                   ₦{dish.price.toLocaleString()}
                 </p>
 
                 {/* BUTTON */}
-                <button className="w-full bg-orange-500 hover:bg-orange-600 transition py-2 rounded-full text-sm font-medium">
+                <button className="w-full bg-orange-500 hover:bg-orange-600 transition py-2 rounded-full text-xs sm:text-sm font-medium">
                   Add to Cart
                 </button>
               </motion.div>
@@ -171,7 +170,10 @@ export default function SignatureDishes() {
             />
 
             <motion.div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-              <div className="bg-[#111] max-w-5xl w-full p-6 rounded-xl relative">
+              <div
+                className="bg-[#111] w-full max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-xl relative"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   onClick={() => setOpen(false)}
                   className="absolute top-3 right-3"
@@ -179,14 +181,14 @@ export default function SignatureDishes() {
                   <X />
                 </button>
 
-                <h3 className="text-2xl font-bold mb-6">
+                <h3 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6">
                   All Signature Dishes
                 </h3>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                   {dishes.map((dish, i) => (
                     <div key={i}>
-                      <div className="h-[140px] rounded-lg overflow-hidden mb-2">
+                      <div className="h-[110px] sm:h-[140px] rounded-lg overflow-hidden mb-2">
                         <Image
                           src={dish.image}
                           alt={dish.name}
@@ -196,7 +198,7 @@ export default function SignatureDishes() {
                         />
                       </div>
 
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs sm:text-sm">
                         <span>{dish.name}</span>
                         <span>₦{dish.price.toLocaleString()}</span>
                       </div>
