@@ -75,7 +75,7 @@ export default function SignatureDishes() {
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 sm:mb-10">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8 sm:mb-10">
           <div>
             <p className="text-gray-400 text-xs sm:text-sm mb-2">Featured</p>
 
@@ -90,7 +90,7 @@ export default function SignatureDishes() {
 
           <button
             onClick={() => setOpen(true)}
-            className="border border-white/20 px-4 py-2 rounded-full text-xs sm:text-sm hover:bg-white/10 w-fit"
+            className="border border-white/20 px-4 py-2 rounded-full text-xs sm:text-sm hover:bg-white/10 w-fit self-start sm:self-auto"
           >
             View all
           </button>
@@ -107,7 +107,7 @@ export default function SignatureDishes() {
                 key={i}
                 whileHover={{ y: -6 }}
                 whileTap={{ scale: 0.97 }}
-                className="min-w-[220px] sm:min-w-[260px] md:min-w-[300px] snap-start"
+                className="min-w-[220px] sm:min-w-[260px] md:min-w-[300px] snap-start flex flex-col"
               >
                 {/* IMAGE */}
                 <div className="h-[160px] sm:h-[200px] rounded-xl overflow-hidden mb-3 sm:mb-4">
@@ -120,23 +120,27 @@ export default function SignatureDishes() {
                   />
                 </div>
 
-                {/* TEXT */}
-                <h3 className="font-semibold text-sm sm:text-lg mb-1">
-                  {dish.name}
-                </h3>
+                {/* CONTENT */}
+                <div className="flex flex-col flex-1">
+                  <h3 className="font-semibold text-sm sm:text-lg mb-1">
+                    {dish.name}
+                  </h3>
 
-                <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
-                  {dish.desc}
-                </p>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-2 line-clamp-2">
+                    {dish.desc}
+                  </p>
 
-                <p className="text-green-500 font-bold text-sm sm:text-lg mb-3">
-                  ₦{dish.price.toLocaleString()}
-                </p>
+                  {/* PUSH DOWN */}
+                  <div className="mt-auto">
+                    <p className="text-green-500 font-bold text-sm sm:text-lg mb-3">
+                      ₦{dish.price.toLocaleString()}
+                    </p>
 
-                {/* BUTTON */}
-                <button className="w-full bg-orange-500 hover:bg-orange-600 transition py-2 rounded-full text-xs sm:text-sm font-medium">
-                  Add to Cart
-                </button>
+                    <button className="w-full bg-orange-500 hover:bg-orange-600 transition py-2 rounded-full text-xs sm:text-sm font-medium">
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
