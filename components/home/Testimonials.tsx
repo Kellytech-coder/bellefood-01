@@ -11,6 +11,7 @@ const testimonials = [
     role: "Position, Company name",
     image: "/images/user1.jpg",
     video: "/videos/test1.mp4",
+    poster:"/images/videos/thumb1-jpg",
   },
   {
     text: `"Lorem ipsum dolor sit amet..."`,
@@ -18,6 +19,7 @@ const testimonials = [
     role: "Position, Company name",
     image: "/images/user2.jpg",
     video: "/videos/test2.mp4",
+    poster:"/images/videos/thumb1-jpg",
   },
 ];
 
