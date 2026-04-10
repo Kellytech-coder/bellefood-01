@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image"; // ✅ FIXED
+import Image from "next/image";
 import {
   ShoppingCart,
   ChevronDown,
@@ -27,6 +27,14 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ✅ FIXED LINK HANDLER
+  const getHref = (item: string) => {
+    if (item === "Home") return "/";
+    if (item === "Menu") return "/menu";        // ✅ FIXED
+    if (item === "Track Orders") return "/#track"; // ✅ FIXED
+    return "/";
+  };
+
   return (
     <>
       <motion.nav
@@ -46,16 +54,16 @@ export default function Navbar() {
               : "bg-white shadow-md border-transparent"
           }`}
         >
-          {/* ✅ LOGO */}
+          {/* LOGO */}
           <div className="flex items-center">
-              <Image
-                src="/images/logo1.png"
-                alt="BelleFood Logo"
-                width={120}
-                height={40}
-                priority
-                className="object-contain w-[95px] md:w-[115px] h-auto"
-              />
+            <Image
+              src="/images/logo1.png"
+              alt="BelleFood Logo"
+              width={120}
+              height={40}
+              priority
+              className="object-contain w-[95px] md:w-[115px] h-auto"
+            />
           </div>
 
           {/* DESKTOP NAV */}
@@ -75,11 +83,7 @@ export default function Navbar() {
                 )}
 
                 <Link
-                  href={`/${
-                    item === "Home"
-                      ? ""
-                      : item.toLowerCase().replace(" ", "")
-                  }`}
+                  href={getHref(item)}
                   className={`relative z-10 px-3 py-1.5 rounded-full transition ${
                     hovered === item ? "text-white" : "text-gray-700"
                   }`}
@@ -96,7 +100,6 @@ export default function Navbar() {
 
           {/* RIGHT */}
           <div className="flex items-center gap-2">
-            {/* Contact */}
             <Link
               href="/contact"
               className="hidden md:block border px-3 py-1.5 rounded-full text-sm"
@@ -104,12 +107,10 @@ export default function Navbar() {
               Contact
             </Link>
 
-            {/* Cart */}
             <button className="bg-orange-500 text-white p-2.5 rounded-full">
               <ShoppingCart size={17} />
             </button>
 
-            {/* Mobile Menu */}
             <button
               onClick={() => setMobileOpen(true)}
               className="md:hidden p-2"
@@ -149,11 +150,7 @@ export default function Navbar() {
                 {navItems.map((item) => (
                   <Link
                     key={item}
-                    href={`/${
-                      item === "Home"
-                        ? ""
-                        : item.toLowerCase().replace(" ", "")
-                    }`}
+                    href={getHref(item)}
                     onClick={() => setMobileOpen(false)}
                     className="text-lg font-medium"
                   >
