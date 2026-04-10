@@ -1,6 +1,5 @@
 import Hero from "@/components/menu/HeroSection";
-// import Partners from "@/components/home/Partners";
-// import Categories from "@/components/home/Categories";
+import Category from "@/components/menu/Category";
 // import WhyChoose from "@/components/home/WhyChoose";
 // import SignatureDishes from "@/components/home/SignatureDishes";
 // import Platters from "@/components/home/Platters";
@@ -12,8 +11,8 @@ export default function Home() {
     <>
       
       <Hero />
-      {/* <Categories />
-      <WhyChoose />
+      <Category />
+      {/* <WhyChoose />
       <SignatureDishes /> */}
       {/* <Platters /> */}
       {/* <Testimonials /> */}
