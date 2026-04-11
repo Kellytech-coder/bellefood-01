@@ -36,7 +36,7 @@ const foods: FoodItem[] = Array.from({ length: 9 }).map((_, i) => ({
   description:
     "Smoky, perfectly seasoned jollof rice with the signature party flavor.",
   price: 4000,
-  image: "/images/jollof.jpg",
+  image: "/images/menu2.png",
   category: "Rice",
   badge:
     i === 0
@@ -153,13 +153,11 @@ export default function MenuCategory() {
         className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50"
       >
         <div className="relative bg-orange-500 p-3 md:p-4 rounded-full shadow-xl cursor-pointer hover:scale-110 transition">
-
           <ShoppingCart className="text-white" size={22} />
 
           <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-2 py-1 rounded-full font-semibold">
             {totalItems}
           </span>
-
         </div>
       </motion.div>
 
@@ -239,7 +237,6 @@ export default function MenuCategory() {
             >
 
               <div className="relative h-48 md:h-52">
-
                 <Image
                   src={food.image}
                   alt={food.name}
@@ -252,7 +249,6 @@ export default function MenuCategory() {
                     {food.badge}
                   </span>
                 )}
-
               </div>
 
               <div className="p-5 md:p-6">
@@ -311,43 +307,51 @@ export default function MenuCategory() {
       </motion.div>
 
       {/* PAGINATION */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between mt-12">
+      <div className="mt-12">
 
-        <button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-          className="flex items-center gap-2 bg-[#101414] text-white px-5 py-3 rounded-full disabled:opacity-40 w-full md:w-auto justify-center"
-        >
-          <ArrowLeft size={16} />
-          Previous
-        </button>
+        <div className="flex items-center justify-between w-full">
 
-        <div className="flex gap-2">
+          {/* PREVIOUS */}
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="flex items-center gap-2 bg-[#101414] text-white px-3 md:px-5 py-2 md:py-3 rounded-full disabled:opacity-40 hover:bg-[#1b1f1f] transition text-sm md:text-base"
+          >
+            <ArrowLeft size={16} />
+            <span className="hidden sm:block">Previous</span>
+          </button>
 
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <div
-              key={i}
-              onClick={() => setPage(i + 1)}
-              className={`h-2 rounded-full cursor-pointer transition-all ${
-                page === i + 1
-                  ? "bg-orange-500 w-6"
-                  : "bg-gray-500 w-2"
-              }`}
-            />
-          ))}
+          {/* DOTS */}
+          <div className="flex gap-2">
+
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`h-2 rounded-full cursor-pointer transition-all ${
+                  page === i + 1
+                    ? "bg-orange-500 w-6"
+                    : "bg-gray-500 w-2"
+                }`}
+              />
+            ))}
+
+          </div>
+
+          {/* NEXT */}
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="flex items-center gap-2 bg-orange-500 text-white px-3 md:px-5 py-2 md:py-3 rounded-full disabled:opacity-40 hover:bg-orange-600 transition text-sm md:text-base"
+          >
+            <span className="hidden sm:block">Next</span>
+            <ArrowRight size={16} />
+          </button>
 
         </div>
 
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage(page + 1)}
-          className="flex items-center gap-2 bg-orange-500 text-white px-5 py-3 rounded-full disabled:opacity-40 w-full md:w-auto justify-center"
-        >
-          Next
-          <ArrowRight size={16} />
-        </button>
-
       </div>
+
     </section>
   );
 }
