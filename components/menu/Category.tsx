@@ -53,6 +53,8 @@ export default function MenuCategory() {
   const [cart, setCart] = useState<{ [key: number]: number }>({});
   const [page, setPage] = useState(1);
 
+  const cartRef = useRef<HTMLDivElement>(null);
+
   const [flyImage, setFlyImage] = useState<{
     image: string;
     startX: number;
@@ -60,8 +62,6 @@ export default function MenuCategory() {
     endX: number;
     endY: number;
   } | null>(null);
-
-  const cartRef = useRef<HTMLDivElement>(null);
 
   const itemsPerPage = 6;
 
@@ -84,13 +84,19 @@ export default function MenuCategory() {
   ) => {
     if (!cartRef.current) return;
 
-    const startRect = e.currentTarget.getBoundingClientRect();
+    const img = e.currentTarget
+      .closest(".food-card")
+      ?.querySelector("img");
+
+    if (!img) return;
+
+    const imgRect = img.getBoundingClientRect();
     const cartRect = cartRef.current.getBoundingClientRect();
 
     setFlyImage({
       image,
-      startX: startRect.left,
-      startY: startRect.top,
+      startX: imgRect.left,
+      startY: imgRect.top,
       endX: cartRect.left,
       endY: cartRect.top,
     });
@@ -135,21 +141,20 @@ export default function MenuCategory() {
   );
 
   return (
-    <section className="bg-[#071311] py-16 px-6 relative min-h-screen overflow-hidden">
+    <section className="bg-[#071311] py-10 md:py-16 px-4 md:px-6 relative min-h-screen overflow-hidden">
 
-      {/* FLOATING CART */}
+      {/* CART */}
       <motion.div
         ref={cartRef}
-        initial={{ scale: 0 }}
         animate={{
           scale: totalItems ? [1, 1.2, 1] : 1,
         }}
         transition={{ duration: 0.3 }}
-        className="fixed bottom-8 right-8 z-40"
+        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50"
       >
-        <div className="relative bg-orange-500 p-4 rounded-full shadow-xl cursor-pointer hover:scale-110 transition">
+        <div className="relative bg-orange-500 p-3 md:p-4 rounded-full shadow-xl cursor-pointer hover:scale-110 transition">
 
-          <ShoppingCart className="text-white" size={24} />
+          <ShoppingCart className="text-white" size={22} />
 
           <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-2 py-1 rounded-full font-semibold">
             {totalItems}
@@ -175,42 +180,53 @@ export default function MenuCategory() {
               scale: 0.1,
               opacity: 0,
             }}
-            exit={{ opacity: 0 }}
             transition={{
               duration: 0.7,
               ease: "easeInOut",
             }}
-            className="fixed w-16 h-16 rounded-full z-50 pointer-events-none"
+            className="fixed w-16 h-16 md:w-20 md:h-20 rounded-full z-50 pointer-events-none shadow-2xl"
           />
         )}
       </AnimatePresence>
 
-      {/* CATEGORY TABS */}
-      <div className="flex gap-4 flex-wrap mb-12">
+      {/* CATEGORY */}
+      <div className="sticky top-0 z-40 bg-[#071311]/95 backdrop-blur-md pt-3 pb-5 mb-8 border-b border-[#1a1f1f]">
 
-        {categories.map((cat) => (
-          <motion.button
-            key={cat}
-            whileTap={{ scale: 0.9 }}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => {
-              setActiveCategory(cat);
-              setPage(1);
-            }}
-            className={`px-5 py-2 rounded-full border transition ${
-              activeCategory === cat
-                ? "bg-orange-500 text-white border-orange-500"
-                : "border-gray-600 text-gray-300 hover:border-orange-500"
-            }`}
-          >
-            {cat}
-          </motion.button>
-        ))}
+        <div className="overflow-x-auto no-scrollbar">
+          <div className="flex gap-3 min-w-max">
+
+            {categories.map((cat) => (
+              <motion.button
+                key={cat}
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setPage(1);
+                }}
+                className={`px-4 py-2 text-sm md:text-base rounded-full border whitespace-nowrap transition ${
+                  activeCategory === cat
+                    ? "bg-orange-500 text-white border-orange-500"
+                    : "border-gray-600 text-gray-300 hover:border-orange-500"
+                }`}
+              >
+                {cat}
+              </motion.button>
+            ))}
+
+          </div>
+        </div>
 
       </div>
 
-      {/* FOOD GRID */}
-      <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-8">
+      {/* GRID */}
+      <motion.div
+        key={activeCategory + page}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+      >
 
         {paginatedFoods.map((food) => {
           const quantity = cart[food.id];
@@ -219,11 +235,10 @@ export default function MenuCategory() {
             <motion.div
               key={food.id}
               whileHover={{ y: -6 }}
-              className="bg-[#101414] rounded-2xl overflow-hidden shadow-lg"
+              className="food-card bg-[#101414] rounded-2xl overflow-hidden shadow-lg"
             >
 
-              {/* IMAGE */}
-              <div className="relative h-52">
+              <div className="relative h-48 md:h-52">
 
                 <Image
                   src={food.image}
@@ -240,10 +255,9 @@ export default function MenuCategory() {
 
               </div>
 
-              {/* CONTENT */}
-              <div className="p-6">
+              <div className="p-5 md:p-6">
 
-                <h3 className="text-white text-xl font-semibold mb-2">
+                <h3 className="text-white text-lg md:text-xl font-semibold mb-2">
                   {food.name}
                 </h3>
 
@@ -263,7 +277,7 @@ export default function MenuCategory() {
                       onClick={(e) =>
                         addToCart(food.id, food.image, e)
                       }
-                      className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600"
+                      className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600 text-sm"
                     >
                       <Plus size={16} />
                       Add
@@ -271,48 +285,43 @@ export default function MenuCategory() {
                   ) : (
                     <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
 
-                      <button
-                        onClick={() => decrease(food.id)}
-                        className="text-white hover:scale-110"
-                      >
-                        <Minus size={16} />
+                      <button onClick={() => decrease(food.id)}>
+                        <Minus size={16} className="text-white" />
                       </button>
 
                       <span className="text-white font-semibold">
                         {quantity}
                       </span>
 
-                      <button
-                        onClick={() => increase(food.id)}
-                        className="text-white hover:scale-110"
-                      >
-                        <Plus size={16} />
+                      <button onClick={() => increase(food.id)}>
+                        <Plus size={16} className="text-white" />
                       </button>
 
                     </div>
                   )}
 
                 </div>
+
               </div>
 
             </motion.div>
           );
         })}
-      </div>
+
+      </motion.div>
 
       {/* PAGINATION */}
-      <div className="flex items-center justify-between mt-14">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between mt-12">
 
         <button
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
-          className="flex items-center gap-2 bg-[#101414] text-white px-5 py-3 rounded-full disabled:opacity-40 hover:bg-[#1a1f1f]"
+          className="flex items-center gap-2 bg-[#101414] text-white px-5 py-3 rounded-full disabled:opacity-40 w-full md:w-auto justify-center"
         >
           <ArrowLeft size={16} />
           Previous
         </button>
 
-        {/* DOTS */}
         <div className="flex gap-2">
 
           {Array.from({ length: totalPages }).map((_, i) => (
@@ -332,7 +341,7 @@ export default function MenuCategory() {
         <button
           disabled={page === totalPages}
           onClick={() => setPage(page + 1)}
-          className="flex items-center gap-2 bg-orange-500 text-white px-5 py-3 rounded-full disabled:opacity-40 hover:bg-orange-600"
+          className="flex items-center gap-2 bg-orange-500 text-white px-5 py-3 rounded-full disabled:opacity-40 w-full md:w-auto justify-center"
         >
           Next
           <ArrowRight size={16} />
