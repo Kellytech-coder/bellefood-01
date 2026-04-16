@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import {
@@ -14,6 +15,7 @@ import {
 type FoodItem = {
   id: number;
   name: string;
+  slug: string; // ✅ added
   description: string;
   price: number;
   image: string;
@@ -32,12 +34,23 @@ const categories = [
 
 const foods: FoodItem[] = Array.from({ length: 9 }).map((_, i) => ({
   id: i + 1,
-  name: "Party Jollof Rice",
+  name:
+    i % 3 === 0
+      ? "Party Jollof Rice"
+      : i % 3 === 1
+      ? "Swallow"
+      : "Fried Rice",
+  slug:
+    i % 3 === 0
+      ? "jollof-rice"
+      : i % 3 === 1
+      ? "swallow"
+      : "fried-rice",
   description:
     "Smoky, perfectly seasoned jollof rice with the signature party flavor.",
   price: 4000,
   image: "/images/menu2.png",
-  category: "Rice",
+  category: i % 3 === 1 ? "Swallow" : "Rice",
   badge:
     i === 0
       ? "Popular"
@@ -82,6 +95,9 @@ export default function MenuCategory() {
     image: string,
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (!cartRef.current) return;
 
     const img = e.currentTarget
@@ -106,19 +122,23 @@ export default function MenuCategory() {
       [id]: prev[id] ? prev[id] + 1 : 1,
     }));
 
-    setTimeout(() => {
-      setFlyImage(null);
-    }, 700);
+    setTimeout(() => setFlyImage(null), 700);
   };
 
-  const increase = (id: number) => {
+  const increase = (id: number, e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     setCart((prev) => ({
       ...prev,
       [id]: prev[id] + 1,
     }));
   };
 
-  const decrease = (id: number) => {
+  const decrease = (id: number, e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     setCart((prev) => {
       const newQty = prev[id] - 1;
 
@@ -146,15 +166,12 @@ export default function MenuCategory() {
       {/* CART */}
       <motion.div
         ref={cartRef}
-        animate={{
-          scale: totalItems ? [1, 1.2, 1] : 1,
-        }}
+        animate={{ scale: totalItems ? [1, 1.2, 1] : 1 }}
         transition={{ duration: 0.3 }}
         className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50"
       >
         <div className="relative bg-orange-500 p-3 md:p-4 rounded-full shadow-xl cursor-pointer hover:scale-110 transition">
           <ShoppingCart className="text-white" size={22} />
-
           <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-2 py-1 rounded-full font-semibold">
             {totalItems}
           </span>
@@ -178,10 +195,7 @@ export default function MenuCategory() {
               scale: 0.1,
               opacity: 0,
             }}
-            transition={{
-              duration: 0.7,
-              ease: "easeInOut",
-            }}
+            transition={{ duration: 0.7, ease: "easeInOut" }}
             className="fixed w-16 h-16 md:w-20 md:h-20 rounded-full z-50 pointer-events-none shadow-2xl"
           />
         )}
@@ -189,10 +203,8 @@ export default function MenuCategory() {
 
       {/* CATEGORY */}
       <div className="sticky top-0 z-40 bg-[#071311]/95 backdrop-blur-md pt-3 pb-5 mb-8 border-b border-[#1a1f1f]">
-
         <div className="overflow-x-auto no-scrollbar">
           <div className="flex gap-3 min-w-max">
-
             {categories.map((cat) => (
               <motion.button
                 key={cat}
@@ -211,10 +223,8 @@ export default function MenuCategory() {
                 {cat}
               </motion.button>
             ))}
-
           </div>
         </div>
-
       </div>
 
       {/* GRID */}
@@ -222,136 +232,97 @@ export default function MenuCategory() {
         key={activeCategory + page}
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
       >
-
         {paginatedFoods.map((food) => {
           const quantity = cart[food.id];
 
           return (
-            <motion.div
-              key={food.id}
-              whileHover={{ y: -6 }}
-              className="food-card bg-[#101414] rounded-2xl overflow-hidden shadow-lg"
-            >
+            <Link key={food.id} href={`/product/${food.slug}`} className="block">
+              <motion.div
+                whileHover={{ y: -6 }}
+                className="food-card bg-[#101414] rounded-2xl overflow-hidden shadow-lg cursor-pointer"
+              >
+                <div className="relative h-48 md:h-52">
+                  <Image
+                    src={food.image}
+                    alt={food.name}
+                    fill
+                    className="object-cover"
+                  />
 
-              <div className="relative h-48 md:h-52">
-                <Image
-                  src={food.image}
-                  alt={food.name}
-                  fill
-                  className="object-cover"
-                />
-
-                {food.badge && (
-                  <span className="absolute right-3 top-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
-                    {food.badge}
-                  </span>
-                )}
-              </div>
-
-              <div className="p-5 md:p-6">
-
-                <h3 className="text-white text-lg md:text-xl font-semibold mb-2">
-                  {food.name}
-                </h3>
-
-                <p className="text-gray-400 text-sm mb-4">
-                  {food.description}
-                </p>
-
-                <div className="flex justify-between items-center">
-
-                  <span className="text-green-500 font-bold text-lg">
-                    ₦{food.price.toLocaleString()}
-                  </span>
-
-                  {!quantity ? (
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) =>
-                        addToCart(food.id, food.image, e)
-                      }
-                      className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600 text-sm"
-                    >
-                      <Plus size={16} />
-                      Add
-                    </motion.button>
-                  ) : (
-                    <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
-
-                      <button onClick={() => decrease(food.id)}>
-                        <Minus size={16} className="text-white" />
-                      </button>
-
-                      <span className="text-white font-semibold">
-                        {quantity}
-                      </span>
-
-                      <button onClick={() => increase(food.id)}>
-                        <Plus size={16} className="text-white" />
-                      </button>
-
-                    </div>
+                  {food.badge && (
+                    <span className="absolute right-3 top-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
+                      {food.badge}
+                    </span>
                   )}
-
                 </div>
 
-              </div>
+                <div className="p-5 md:p-6">
+                  <h3 className="text-white text-lg md:text-xl font-semibold mb-2">
+                    {food.name}
+                  </h3>
 
-            </motion.div>
+                  <p className="text-gray-400 text-sm mb-4">
+                    {food.description}
+                  </p>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-green-500 font-bold text-lg">
+                      ₦{food.price.toLocaleString()}
+                    </span>
+
+                    {!quantity ? (
+                      <button
+                        onClick={(e) =>
+                          addToCart(food.id, food.image, e)
+                        }
+                        className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600 text-sm"
+                      >
+                        <Plus size={16} />
+                        Add
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
+                        <button onClick={(e) => decrease(food.id, e)}>
+                          <Minus size={16} className="text-white" />
+                        </button>
+
+                        <span className="text-white font-semibold">
+                          {quantity}
+                        </span>
+
+                        <button onClick={(e) => increase(food.id, e)}>
+                          <Plus size={16} className="text-white" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
           );
         })}
-
       </motion.div>
 
       {/* PAGINATION */}
-      <div className="mt-12">
+      <div className="mt-12 flex justify-between items-center">
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+          className="bg-[#101414] px-4 py-2 rounded-full text-white disabled:opacity-40"
+        >
+          <ArrowLeft size={16} />
+        </button>
 
-        <div className="flex items-center justify-between w-full">
-
-          {/* PREVIOUS */}
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="flex items-center gap-2 bg-[#101414] text-white px-3 md:px-5 py-2 md:py-3 rounded-full disabled:opacity-40 hover:bg-[#1b1f1f] transition text-sm md:text-base"
-          >
-            <ArrowLeft size={16} />
-            <span className="hidden sm:block">Previous</span>
-          </button>
-
-          {/* DOTS */}
-          <div className="flex gap-2">
-
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <div
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`h-2 rounded-full cursor-pointer transition-all ${
-                  page === i + 1
-                    ? "bg-orange-500 w-6"
-                    : "bg-gray-500 w-2"
-                }`}
-              />
-            ))}
-
-          </div>
-
-          {/* NEXT */}
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="flex items-center gap-2 bg-orange-500 text-white px-3 md:px-5 py-2 md:py-3 rounded-full disabled:opacity-40 hover:bg-orange-600 transition text-sm md:text-base"
-          >
-            <span className="hidden sm:block">Next</span>
-            <ArrowRight size={16} />
-          </button>
-
-        </div>
-
+        <button
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+          className="bg-orange-500 px-4 py-2 rounded-full text-white disabled:opacity-40"
+        >
+          <ArrowRight size={16} />
+        </button>
       </div>
-
     </section>
   );
 }
