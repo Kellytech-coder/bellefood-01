@@ -67,7 +67,7 @@ export default function Navbar() {
           </div>
 
           {/* DESKTOP NAV */}
-          <div className="hidden md:flex items-center gap-5 text-sm font-semibold text-gray-700">
+          <div className="hidden md:flex items-center gap-5 text-sm font-semibold text-gray-950">
             {navItems.map((item) => (
               <div
                 key={item}
@@ -85,7 +85,7 @@ export default function Navbar() {
                 <Link
                   href={getHref(item)}
                   className={`relative z-10 px-3 py-1.5 rounded-full transition ${
-                    hovered === item ? "text-white" : "text-gray-700"
+                    hovered === item ? "text-white" : "text-gray-950"
                   }`}
                 >
                   {item}
@@ -102,7 +102,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               href="/contact"
-              className="hidden md:block border px-3 py-1.5 rounded-full text-sm"
+              className="hidden md:block border px-3 py-1.5 rounded-full text-sm text-gray-950"
             >
               Contact
             </Link>
