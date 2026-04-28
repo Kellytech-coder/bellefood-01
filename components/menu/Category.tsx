@@ -12,10 +12,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { useCartStore } from "@/lib/cartStore";
+
 type FoodItem = {
   id: number;
   name: string;
-  slug: string; // ✅ added
+  slug: string;
   description: string;
   price: number;
   image: string;
@@ -63,7 +65,6 @@ const foods: FoodItem[] = Array.from({ length: 9 }).map((_, i) => ({
 
 export default function MenuCategory() {
   const [activeCategory, setActiveCategory] = useState("All Items");
-  const [cart, setCart] = useState<{ [key: number]: number }>({});
   const [page, setPage] = useState(1);
 
   const cartRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,12 @@ export default function MenuCategory() {
     endX: number;
     endY: number;
   } | null>(null);
+
+  // ✅ ZUSTAND STORE
+  const cart = useCartStore((state) => state.cart);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const increaseQty = useCartStore((state) => state.increaseQty);
+  const decreaseQty = useCartStore((state) => state.decreaseQty);
 
   const itemsPerPage = 6;
 
@@ -90,9 +97,9 @@ export default function MenuCategory() {
     page * itemsPerPage
   );
 
-  const addToCart = (
-    id: number,
-    image: string,
+  // ✅ ADD TO CART (ZUSTAND + ANIMATION)
+  const addToCartHandler = (
+    food: FoodItem,
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.preventDefault();
@@ -110,55 +117,25 @@ export default function MenuCategory() {
     const cartRect = cartRef.current.getBoundingClientRect();
 
     setFlyImage({
-      image,
+      image: food.image,
       startX: imgRect.left,
       startY: imgRect.top,
       endX: cartRect.left,
       endY: cartRect.top,
     });
 
-    setCart((prev) => ({
-      ...prev,
-      [id]: prev[id] ? prev[id] + 1 : 1,
-    }));
+    addToCart({
+      id: food.id,
+      name: food.name,
+      desc: food.description,
+      price: food.price,
+      qty: 1,
+    });
 
     setTimeout(() => setFlyImage(null), 700);
   };
 
-  const increase = (id: number, e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setCart((prev) => ({
-      ...prev,
-      [id]: prev[id] + 1,
-    }));
-  };
-
-  const decrease = (id: number, e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setCart((prev) => {
-      const newQty = prev[id] - 1;
-
-      if (newQty <= 0) {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      }
-
-      return {
-        ...prev,
-        [id]: newQty,
-      };
-    });
-  };
-
-  const totalItems = Object.values(cart).reduce(
-    (sum, qty) => sum + qty,
-    0
-  );
+  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
 
   return (
     <section className="bg-[#071311] py-10 md:py-16 px-4 md:px-6 relative min-h-screen overflow-hidden">
@@ -170,12 +147,17 @@ export default function MenuCategory() {
         transition={{ duration: 0.3 }}
         className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50"
       >
-        <div className="relative bg-orange-500 p-3 md:p-4 rounded-full shadow-xl cursor-pointer hover:scale-110 transition">
-          <ShoppingCart className="text-white" size={22} />
-          <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-2 py-1 rounded-full font-semibold">
-            {totalItems}
-          </span>
-        </div>
+        <Link href="/cart">
+          <div className="relative bg-orange-500 p-3 md:p-4 rounded-full shadow-xl cursor-pointer hover:scale-110 transition">
+            <ShoppingCart className="text-white" size={22} />
+
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-2 bg-white text-black text-xs px-2 py-1 rounded-full font-semibold">
+                {totalItems}
+              </span>
+            )}
+          </div>
+        </Link>
       </motion.div>
 
       {/* FLY IMAGE */}
@@ -235,7 +217,7 @@ export default function MenuCategory() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
       >
         {paginatedFoods.map((food) => {
-          const quantity = cart[food.id];
+          const quantity = cart.find((item) => item.id === food.id)?.qty;
 
           return (
             <Link key={food.id} href={`/product/${food.slug}`} className="block">
@@ -274,9 +256,7 @@ export default function MenuCategory() {
 
                     {!quantity ? (
                       <button
-                        onClick={(e) =>
-                          addToCart(food.id, food.image, e)
-                        }
+                        onClick={(e) => addToCartHandler(food, e)}
                         className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600 text-sm"
                       >
                         <Plus size={16} />
@@ -284,7 +264,7 @@ export default function MenuCategory() {
                       </button>
                     ) : (
                       <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
-                        <button onClick={(e) => decrease(food.id, e)}>
+                        <button onClick={(e) => decreaseQty(food.id)}>
                           <Minus size={16} className="text-white" />
                         </button>
 
@@ -292,7 +272,7 @@ export default function MenuCategory() {
                           {quantity}
                         </span>
 
-                        <button onClick={(e) => increase(food.id, e)}>
+                        <button onClick={(e) => increaseQty(food.id)}>
                           <Plus size={16} className="text-white" />
                         </button>
                       </div>

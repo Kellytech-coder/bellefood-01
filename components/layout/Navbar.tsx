@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCartStore } from "@/lib/cartStore";
 import { useEffect, useState } from "react";
 
 const navItems = ["Home", "Menu", "Track Orders"];
@@ -17,6 +18,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState<string | null>("Home");
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // ✅ CART STORE
+  const cart = useCartStore((state) => state.cart);
+  const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,11 +32,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ FIXED LINK HANDLER
   const getHref = (item: string) => {
     if (item === "Home") return "/";
-    if (item === "Menu") return "/menu";        // ✅ FIXED
-    if (item === "Track Orders") return "/#track"; // ✅ FIXED
+    if (item === "Menu") return "/menu";
+    if (item === "Track Orders") return "/#track";
     return "/";
   };
 
@@ -98,7 +102,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT SECTION */}
           <div className="flex items-center gap-2">
             <Link
               href="/contact"
@@ -107,9 +111,21 @@ export default function Navbar() {
               Contact
             </Link>
 
-            <button className="bg-orange-500 text-white p-2.5 rounded-full">
-              <ShoppingCart size={17} />
-            </button>
+            {/* ✅ CART ICON WITH BADGE */}
+            <div className="relative">
+              <Link
+                href="/cart"
+                className="bg-orange-500 text-white p-2.5 rounded-full flex items-center justify-center hover:scale-105 transition"
+              >
+                <ShoppingCart size={17} />
+              </Link>
+
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {totalItems}
+                </span>
+              )}
+            </div>
 
             <button
               onClick={() => setMobileOpen(true)}
@@ -137,7 +153,6 @@ export default function Navbar() {
               transition={{ type: "spring", stiffness: 120 }}
               className="bg-white w-full p-6 rounded-b-3xl"
             >
-              {/* TOP */}
               <div className="flex justify-between items-center mb-6">
                 <span className="text-xl font-bold">Menu</span>
                 <button onClick={() => setMobileOpen(false)}>
@@ -145,7 +160,6 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* LINKS */}
               <div className="flex flex-col gap-4">
                 {navItems.map((item) => (
                   <Link
