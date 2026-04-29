@@ -3,6 +3,7 @@
 import { motion, Variants } from "framer-motion";
 import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
 import { useCartStore } from "@/lib/cartStore";
+import { useRouter } from "next/navigation";
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -22,7 +23,9 @@ const itemAnim: Variants = {
 };
 
 export default function CartItems() {
-  // ✅ CONNECTED TO ZUSTAND (REAL CART)
+  const router = useRouter();
+
+  // Zustand store
   const cart = useCartStore((state) => state.cart);
   const increaseQty = useCartStore((state) => state.increaseQty);
   const decreaseQty = useCartStore((state) => state.decreaseQty);
@@ -36,11 +39,16 @@ export default function CartItems() {
   const delivery = cart.length > 0 ? 1000 : 0;
   const total = subtotal + delivery;
 
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
+    router.push("/checkout");
+  };
+
   return (
     <section className="bg-[#071a14] text-white py-16">
       <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-3 gap-10">
 
-        {/* LEFT */}
+        {/* LEFT SIDE */}
         <motion.div
           variants={container}
           initial="hidden"
@@ -62,7 +70,7 @@ export default function CartItems() {
               variants={itemAnim}
               className="flex flex-col sm:flex-row sm:items-center justify-between bg-[#1c1c1e] p-5 rounded-2xl border border-gray-700 gap-4"
             >
-              {/* LEFT */}
+              {/* ITEM INFO */}
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-gray-400 rounded-xl" />
 
@@ -75,10 +83,10 @@ export default function CartItems() {
                 </div>
               </div>
 
-              {/* RIGHT */}
+              {/* ACTIONS */}
               <div className="flex items-center gap-4">
 
-                {/* Qty */}
+                {/* Quantity */}
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => decreaseQty(item.id)}
@@ -97,7 +105,7 @@ export default function CartItems() {
                   </button>
                 </div>
 
-                {/* Delete */}
+                {/* Remove */}
                 <button
                   onClick={() => removeFromCart(item.id)}
                   className="text-gray-400 hover:text-red-500"
@@ -109,7 +117,7 @@ export default function CartItems() {
           ))}
         </motion.div>
 
-        {/* RIGHT */}
+        {/* RIGHT SIDE */}
         <motion.div
           variants={itemAnim}
           initial="hidden"
@@ -143,6 +151,7 @@ export default function CartItems() {
 
           <button
             disabled={cart.length === 0}
+            onClick={handleCheckout}
             className={`w-full py-3 rounded-full font-medium transition ${
               cart.length === 0
                 ? "bg-gray-600 cursor-not-allowed"
