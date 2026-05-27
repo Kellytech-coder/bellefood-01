@@ -2,9 +2,14 @@
 
 import { motion, Variants } from "framer-motion";
 import { MapPin } from "lucide-react";
-import { useState } from "react";
+import {
+  useCheckoutProgress,
+  useCheckoutProgressActions,
+} from "@/lib/checkoutProgressStore";
 
-// ✅ Animation setup
+
+
+
 const container: Variants = {
   hidden: {},
   show: {
@@ -27,7 +32,8 @@ const item: Variants = {
 };
 
 export default function DeliveryAddress() {
-  const [selected, setSelected] = useState<"home" | "office" | null>(null);
+  const progress = useCheckoutProgress();
+  const actions = useCheckoutProgressActions();
 
   return (
     <motion.div
@@ -51,9 +57,9 @@ export default function DeliveryAddress() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Home */}
           <button
-            onClick={() => setSelected("home")}
+            onClick={() => actions.setSelectedDeliveryOption("home")}
             className={`text-left rounded-xl border p-4 transition-all duration-300 ${
-              selected === "home"
+              progress.selectedDeliveryOption === "home"
                 ? "border-orange-500 bg-orange-500/5"
                 : "border-gray-700 hover:border-gray-500"
             }`}
@@ -66,9 +72,9 @@ export default function DeliveryAddress() {
 
           {/* Office */}
           <button
-            onClick={() => setSelected("office")}
+            onClick={() => actions.setSelectedDeliveryOption("office")}
             className={`text-left rounded-xl border p-4 transition-all duration-300 ${
-              selected === "office"
+              progress.selectedDeliveryOption === "office"
                 ? "border-orange-500 bg-orange-500/5"
                 : "border-gray-700 hover:border-gray-500"
             }`}
@@ -90,6 +96,8 @@ export default function DeliveryAddress() {
 
         <textarea
           placeholder="Enter full delivery address..."
+          value={progress.deliveryAddress}
+          onChange={(e) => actions.setDeliveryAddress(e.target.value)}
           className="w-full h-32 p-4 rounded-xl bg-transparent border border-gray-700 text-white placeholder-gray-500 outline-none resize-none transition-all duration-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40 hover:border-gray-500"
         />
       </motion.div>
@@ -103,6 +111,8 @@ export default function DeliveryAddress() {
         <input
           type="text"
           placeholder="e.g. Nearest bus stop"
+          value={progress.landmark}
+          onChange={(e) => actions.setLandmark(e.target.value)}
           className="w-full h-12 px-4 rounded-xl bg-transparent border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40 hover:border-gray-500"
         />
       </motion.div>

@@ -115,10 +115,9 @@ export default function HeroSection() {
 
             <ChevronRight size={16} className="text-white/50" />
 
-            <span className="text-white font-medium">
-              Menu
-            </span>
+            <span className="text-white font-medium">Menu</span>
           </div>
+
 
           {/* 📍 LOCATION */}
           <div className="flex flex-col items-start md:items-end gap-1 w-full md:w-auto">

@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/cartStore";
 import { useEffect, useState } from "react";
 
-const navItems = ["Home", "Menu", "Track Orders"];
+const navItems = ["Home", "Menu", "Track Orders", "About Us"];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -36,6 +36,8 @@ export default function Navbar() {
     if (item === "Home") return "/";
     if (item === "Menu") return "/menu";
     if (item === "Track Orders") return "/#track";
+    if (item === "About Us") return "/#about";
+   
     return "/";
   };
 
@@ -72,13 +74,14 @@ export default function Navbar() {
 
           {/* DESKTOP NAV */}
           <div className="hidden md:flex items-center gap-5 text-sm font-semibold text-gray-950">
-            {navItems.map((item) => (
-              <div
-                key={item}
-                className="relative px-1 py-1"
-                onMouseEnter={() => setHovered(item)}
-                onMouseLeave={() => setHovered(null)}
-              >
+                {navItems.map((item) => (
+                  <div
+                    key={item}
+                    className="relative px-1 py-1"
+                    onMouseEnter={() => setHovered(item)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
+
                 {hovered === item && (
                   <motion.div
                     layoutId="nav-pill"
@@ -96,10 +99,6 @@ export default function Navbar() {
                 </Link>
               </div>
             ))}
-
-            <div className="flex items-center gap-1 cursor-pointer text-sm">
-              Services <ChevronDown size={14} />
-            </div>
           </div>
 
           {/* RIGHT SECTION */}

@@ -1,23 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+
+
+
+import {
+  computeCheckoutProgressPercent,
+  useCheckoutProgress,
+} from "@/lib/checkoutProgressStore";
 
 const steps = ["Home", "Menu", "Cart", "Checkout"];
 
 export default function CheckoutHeader() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const progressState = useCheckoutProgress();
+  const progress = computeCheckoutProgressPercent(progressState);
 
-  // Simulate progress (replace with real logic later)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentStep(0); // change dynamically when integrating
-    }, 500);
+  const currentStep = steps.length - 1;
+  const completedCount = progressState.selectedDeliveryOption ? 1 : 0;
+  const deliveryAddressDone = progressState.deliveryAddress.trim().length > 0;
+  const landmarkDone = progressState.landmark.trim().length > 0;
+  const checkoutFieldsTotal = 3; // quick select + address + landmark
+  const checkoutFieldsDone =
+    completedCount + (deliveryAddressDone ? 1 : 0) + (landmarkDone ? 1 : 0);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const progress = (currentStep / steps.length) * 100;
 
   return (
     <section className="w-full bg-[#020D0B] py-16 md:py-20 px-6 md:px-12 text-white overflow-hidden">
@@ -47,31 +53,44 @@ export default function CheckoutHeader() {
           }}
           className="flex items-center gap-3 mt-6 text-sm md:text-base text-gray-300"
         >
-          {steps.map((step, index) => (
-            <motion.div
-              key={step}
-              variants={{
-                hidden: { opacity: 0, y: 10 },
-                show: { opacity: 1, y: 0 },
-              }}
-              className="flex items-center gap-3"
-            >
-              <span
-                className={`${
-                  index === steps.length - 1
-                    ? "text-white font-medium"
-                    : "text-gray-400"
-                }`}
-              >
-                {step}
-              </span>
+          {steps.map((step, index) => {
+            const href =
+              step === "Home"
+                ? "/"
+                : step === "Menu"
+                  ? "/menu"
+                  : step === "Cart"
+                    ? "/cart"
+                    : "/checkout";
 
-              {index !== steps.length - 1 && (
-                <span className="text-gray-500">›</span>
-              )}
-            </motion.div>
-          ))}
+            const isLast = index === steps.length - 1;
+
+            return (
+              <motion.div
+                key={step}
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  show: { opacity: 1, y: 0 },
+                }}
+                className="flex items-center gap-3"
+              >
+                {isLast ? (
+                  <span className="text-white font-medium">{step}</span>
+                ) : (
+                  <Link
+                    href={href}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {step}
+                  </Link>
+                )}
+
+                {!isLast && <span className="text-gray-500">›</span>}
+              </motion.div>
+            );
+          })}
         </motion.div>
+
 
         {/* 📊 PROGRESS BAR */}
         <div className="w-full mt-8 flex items-center gap-4">
@@ -80,19 +99,19 @@ export default function CheckoutHeader() {
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
-              className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"
+              className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full"
             />
           </div>
 
           {/* 🔢 COUNTER */}
           <motion.span
-            key={currentStep}
+            key={checkoutFieldsDone}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.2 }}
             className="text-sm md:text-base text-gray-300 whitespace-nowrap"
           >
-            {currentStep}/{steps.length} Completed
+            {checkoutFieldsDone}/{checkoutFieldsTotal} Completed
           </motion.span>
         </div>
       </div>

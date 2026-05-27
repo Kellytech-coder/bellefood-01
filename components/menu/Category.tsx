@@ -10,7 +10,14 @@ import {
   Minus,
   ArrowLeft,
   ArrowRight,
+  UtensilsCrossed,
+  Drumstick,
+  Leaf,
+  Sparkles,
+  Soup,
+  Wine,
 } from "lucide-react";
+
 
 import { useCartStore } from "@/lib/cartStore";
 
@@ -187,27 +194,52 @@ export default function MenuCategory() {
       <div className="sticky top-0 z-40 bg-[#071311]/95 backdrop-blur-md pt-3 pb-5 mb-8 border-b border-[#1a1f1f]">
         <div className="overflow-x-auto no-scrollbar">
           <div className="flex gap-3 min-w-max">
-            {categories.map((cat) => (
-              <motion.button
-                key={cat}
-                whileTap={{ scale: 0.9 }}
-                whileHover={{ scale: 1.05 }}
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setPage(1);
-                }}
-                className={`px-4 py-2 text-sm md:text-base rounded-full border whitespace-nowrap transition ${
-                  activeCategory === cat
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "border-gray-600 text-gray-300 hover:border-orange-500"
-                }`}
-              >
-                {cat}
-              </motion.button>
-            ))}
+            {categories.map((cat) => {
+              const Icon =
+                cat === "All Items"
+                  ? Sparkles
+                  : cat === "Rice"
+                    ? Drumstick
+                    : cat === "Swallow"
+                      ? Soup
+                      : cat === "Proteins"
+                        ? UtensilsCrossed
+                        : cat === "Platters"
+                          ? Leaf
+                          : Wine;
+
+              const isActive = activeCategory === cat;
+
+              return (
+                <motion.button
+                  key={cat}
+                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => {
+                    setActiveCategory(cat);
+                    setPage(1);
+                  }}
+                  className={`px-4 py-2 text-sm md:text-base rounded-full border whitespace-nowrap transition ${
+                    isActive
+                      ? "bg-orange-500 text-white border-orange-500"
+                      : "border-gray-600 text-gray-300 hover:border-orange-500"
+                  }`}
+                >
+                  <span
+                    className={`flex items-center gap-2 ${
+                      isActive ? "text-white" : "text-gray-300"
+                    }`}
+                  >
+                    <Icon size={16} className={isActive ? "text-white" : "text-orange-400"} />
+                    {cat}
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </div>
+
 
       {/* GRID */}
       <motion.div
