@@ -119,17 +119,21 @@ export default function Hero() {
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.03 }}
               className="bg-orange-500 px-5 py-3 rounded-full flex items-center justify-center gap-2 text-sm font-medium hover:bg-orange-600 transition"
-            >
-              Order Now <ArrowRight size={16} />
-            </motion.button>
+          type="button"
+            onClick={() => (window.location.href = "/menu")}
+          >
+            Order Now <ArrowRight size={16} />
+          </motion.button>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.03 }}
-              className="border border-white/40 px-5 py-3 rounded-full text-sm font-medium hover:bg-white/10 transition"
-            >
-              Track Orders
-            </motion.button>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03 }}
+            onClick={() => (window.location.href = "/checkout")}
+            className="border border-white/40 px-5 py-3 rounded-full text-sm font-medium hover:bg-white/10 transition"
+          >
+            Track Orders
+          </motion.button>
           </motion.div>
 
           {/* ⭐ Rating Box */}
