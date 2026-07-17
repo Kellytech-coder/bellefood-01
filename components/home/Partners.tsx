@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useAnimation } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const partners = [
   { name: "Glovo", logo: "/images/glovo1.png" },
@@ -14,7 +14,6 @@ const partners = [
 export default function Partners() {
   const controls = useAnimation();
 
-  // ▶️ Start marquee
   const start = () => {
     controls.start({
       x: ["0%", "-50%"],
@@ -26,26 +25,25 @@ export default function Partners() {
     });
   };
 
-  // ⏸ Pause on touch
-  const stop = () => {
-    controls.stop();
-  };
+  const stop = () => controls.stop();
+
+  // ✅ start automatically
+  useEffect(() => {
+    start();
+  }, []);
 
   return (
-    <section className="relative bg-[#071311] py-16 md:py-24 overflow-hidden">
+    <section className="relative bg-[#071311] py-12 sm:py-16 md:py-24 overflow-x-hidden">
 
-      {/* TEXT (container removed; only text visible) */}
+      {/* TEXT */}
       <motion.div
-        initial={{ opacity: 0, x: -40 }}
+        initial={{ opacity: 0, x: -30 }}
         whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="
-          relative md:absolute
-          md:left-0 md:top-1/2 md:-translate-y-1/2
-          z-30 px-4 md:pl-6 mb-10 md:mb-0
-        "
+        className="px-4 sm:px-6 md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 z-30 mb-8 md:mb-0"
       >
-        <h3 className="text-lg md:text-2xl font-semibold text-gray-200 leading-snug">
+        <h3 className="text-base sm:text-lg md:text-2xl font-semibold text-gray-200 leading-snug max-w-xs">
           Partnering with top leading
           <br />
           companies in Nigeria
@@ -53,23 +51,22 @@ export default function Partners() {
       </motion.div>
 
       {/* LEFT MASK */}
-      <div className="hidden md:block absolute left-0 top-0 h-full w-[45%] bg-gradient-to-r from-[#071311] via-[#071311]/95 to-transparent z-20" />
+      <div className="hidden md:block absolute left-0 top-0 h-full w-[40%] bg-gradient-to-r from-[#071311] via-[#071311]/95 to-transparent z-20" />
 
       {/* MARQUEE */}
       <div
         className="relative flex items-center overflow-hidden z-10"
-        onTouchStart={stop}   // ✅ pause on mobile touch
-        onTouchEnd={start}    // ✅ resume
-        onMouseEnter={stop}   // desktop hover pause
+        onTouchStart={stop}
+        onTouchEnd={start}
+        onMouseEnter={stop}
         onMouseLeave={start}
       >
         {/* RIGHT FADE */}
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-20 md:w-32 bg-gradient-to-l from-[#071311] to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-16 sm:w-20 md:w-32 bg-gradient-to-l from-[#071311] to-transparent z-10" />
 
         <motion.div
-          className="flex gap-10 md:gap-20 w-max"
+          className="flex gap-8 sm:gap-12 md:gap-20 w-max"
           animate={controls}
-          onViewportEnter={start}
         >
           {[...partners, ...partners].map((partner, index) => (
             <LogoItem key={index} partner={partner} />
@@ -86,15 +83,8 @@ function LogoItem({ partner }: any) {
   return (
     <motion.div
       whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.92 }} // ✅ MOBILE PRESS
-      className="
-        relative 
-        w-[100px] h-[40px] 
-        md:w-[140px] md:h-[50px] 
-        flex-shrink-0 
-        opacity-80 hover:opacity-100 transition
-        active:opacity-100
-      "
+      whileTap={{ scale: 0.92 }}
+      className="relative w-[90px] h-[35px] sm:w-[110px] sm:h-[40px] md:w-[140px] md:h-[50px] flex-shrink-0 opacity-80 hover:opacity-100 transition"
     >
       {/* Skeleton */}
       {!loaded && (
@@ -108,6 +98,9 @@ function LogoItem({ partner }: any) {
         src={partner.logo}
         alt={partner.name}
         fill
+        sizes="(max-width: 640px) 90px,
+               (max-width: 1024px) 110px,
+               140px"
         onLoad={() => setLoaded(true)}
         className={`object-contain transition-all duration-700 ${
           loaded
