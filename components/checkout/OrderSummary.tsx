@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion, Variants, easeOut } from "framer-motion";
 import { ShoppingCart, AlertCircle } from "lucide-react";
 
@@ -11,7 +12,7 @@ const container: Variants = {
     transition: {
       staggerChildren: 0.12,
       duration: 0.5,
-      ease: easeOut, // ✅ correct typing
+      ease: easeOut,
     },
   },
 };
@@ -61,7 +62,10 @@ export default function OrderSummary() {
       </div>
 
       {/* Divider */}
-      <motion.div variants={item} className="border-t border-gray-800 my-6" />
+      <motion.div
+        variants={item}
+        className="border-t border-gray-800 my-6"
+      />
 
       {/* Subtotal */}
       <motion.div
@@ -82,7 +86,10 @@ export default function OrderSummary() {
       </motion.div>
 
       {/* Divider */}
-      <motion.div variants={item} className="border-t border-gray-800 my-6" />
+      <motion.div
+        variants={item}
+        className="border-t border-gray-800 my-6"
+      />
 
       {/* Total */}
       <motion.div
@@ -99,31 +106,34 @@ export default function OrderSummary() {
         className="mt-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex gap-3"
       >
         <AlertCircle className="text-red-400 mt-1" size={18} />
+
         <div>
           <p className="text-red-400 font-medium">
             Estimated Delivery
           </p>
+
           <p className="text-sm text-gray-400">
             Fill-in your details and select a delivery zone to continue
           </p>
         </div>
       </motion.div>
 
-      {/* Button */}
-      <motion.button
-        variants={item}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-        className="w-full mt-6 bg-orange-600 hover:bg-orange-500 transition py-3 rounded-full text-white font-medium flex items-center justify-center gap-2"
-      >
-        <motion.span
-          whileHover={{ x: 3 }}
-          transition={{ type: "spring", stiffness: 300 }}
+      {/* Complete Order Button */}
+      <motion.div variants={item}>
+        <Link
+          href="/order-confirmation"
+          className="w-full mt-6 bg-orange-600 hover:bg-orange-500 transition py-3 rounded-full text-white font-medium flex items-center justify-center gap-2"
         >
-          <ShoppingCart size={18} />
-        </motion.span>
-        Complete Order
-      </motion.button>
+          <motion.span
+            whileHover={{ x: 3 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <ShoppingCart size={18} />
+          </motion.span>
+
+          Complete Order
+        </Link>
+      </motion.div>
 
       {/* Footer Note */}
       <motion.p
@@ -131,7 +141,9 @@ export default function OrderSummary() {
         className="text-xs text-gray-500 mt-4 text-center leading-relaxed"
       >
         Your payment info is secure. By placing your order, you agree to our{" "}
-        <span className="text-orange-500">Terms and Conditions</span>.
+        <span className="text-orange-500">
+          Terms and Conditions
+        </span>.
       </motion.p>
     </motion.div>
   );
