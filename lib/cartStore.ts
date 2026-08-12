@@ -1,19 +1,21 @@
 import { create } from "zustand";
 
 export type CartItem = {
-  id: number;
+  id: string;
   name: string;
   desc: string; // ✅ REQUIRED (you are using it everywhere)
   price: number;
   qty: number;
+  image?: string;
 };
 
 type CartStore = {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number) => void;
-  increaseQty: (id: number) => void;
-  decreaseQty: (id: number) => void;
+  removeFromCart: (id: string) => void;
+  increaseQty: (id: string) => void;
+  decreaseQty: (id: string) => void;
+  clearCart: () => void;
 };
 
 export const useCartStore = create<CartStore>((set) => ({
@@ -54,4 +56,6 @@ export const useCartStore = create<CartStore>((set) => ({
         )
         .filter((item) => item.qty > 0),
     })),
+
+  clearCart: () => set({ cart: [] }),
 }));

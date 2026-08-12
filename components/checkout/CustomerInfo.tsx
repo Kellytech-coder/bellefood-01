@@ -2,6 +2,7 @@
 
 import { motion, Variants } from "framer-motion";
 import { User, Phone, Mail } from "lucide-react";
+import { useCustomerStore } from "@/lib/customerStore";
 
 // ✅ Container animation (stagger)
 const container: Variants = {
@@ -27,6 +28,13 @@ const item: Variants = {
 };
 
 export default function CustomerInfo() {
+  const fullName = useCustomerStore((s) => s.fullName);
+  const phone = useCustomerStore((s) => s.phone);
+  const email = useCustomerStore((s) => s.email);
+  const setFullName = useCustomerStore((s) => s.setFullName);
+  const setPhone = useCustomerStore((s) => s.setPhone);
+  const setEmail = useCustomerStore((s) => s.setEmail);
+
   return (
     <motion.div
       variants={container}
@@ -53,6 +61,8 @@ export default function CustomerInfo() {
           <input
             type="text"
             placeholder="Enter your name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             className="w-full h-12 px-4 rounded-xl bg-transparent border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40 hover:border-gray-500"
           />
         </motion.div>
@@ -69,6 +79,8 @@ export default function CustomerInfo() {
             <input
               type="tel"
               placeholder="+234 000 000 000"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full h-12 px-4 rounded-xl bg-transparent border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40 hover:border-gray-500"
             />
           </motion.div>
@@ -83,6 +95,8 @@ export default function CustomerInfo() {
             <input
               type="email"
               placeholder="Your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full h-12 px-4 rounded-xl bg-transparent border border-gray-700 text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40 hover:border-gray-500"
             />
           </motion.div>
@@ -91,3 +105,4 @@ export default function CustomerInfo() {
     </motion.div>
   );
 }
+

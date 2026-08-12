@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ShoppingCart,
   Plus,
@@ -16,19 +16,15 @@ import {
   Sparkles,
   Soup,
   Wine,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 
-
 import { useCartStore } from "@/lib/cartStore";
+import { getProducts, Product } from "@/lib/api";
 
-type FoodItem = {
-  id: number;
-  name: string;
+type FoodItem = Product & {
   slug: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
   badge?: string;
 };
 
@@ -41,38 +37,21 @@ const categories = [
   "Drinks",
 ];
 
-const foods: FoodItem[] = Array.from({ length: 9 }).map((_, i) => ({
-  id: i + 1,
-  name:
-    i % 3 === 0
-      ? "Party Jollof Rice"
-      : i % 3 === 1
-      ? "Swallow"
-      : "Fried Rice",
-  slug:
-    i % 3 === 0
-      ? "jollof-rice"
-      : i % 3 === 1
-      ? "swallow"
-      : "fried-rice",
-  description:
-    "Smoky, perfectly seasoned jollof rice with the signature party flavor.",
-  price: 4000,
-  image: "/images/menu2.png",
-  category: i % 3 === 1 ? "Swallow" : "Rice",
-  badge:
-    i === 0
-      ? "Popular"
-      : i === 1
-      ? "Best Seller"
-      : i === 2
-      ? "Premium"
-      : undefined,
-}));
+// Fallback image mapping when backend imageUrl is missing
+const fallbackImages: Record<string, string> = {
+  Rice: "/images/menu2.png",
+  Swallow: "/images/menu2.png",
+  Proteins: "/images/cat-turkey1.png",
+  Platters: "/images/platter1.png",
+  Drinks: "/images/cat-drink1.png",
+};
 
 export default function MenuCategory() {
   const [activeCategory, setActiveCategory] = useState("All Items");
   const [page, setPage] = useState(1);
+  const [products, setProducts] = useState<FoodItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const cartRef = useRef<HTMLDivElement>(null);
 
@@ -92,12 +71,57 @@ export default function MenuCategory() {
 
   const itemsPerPage = 6;
 
+  // ✅ FETCH PRODUCTS FROM BACKEND
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+
+        if (!mounted) return;
+
+        const foods: FoodItem[] = data
+          .filter((p) => p.available !== false)
+          .map((p) => ({
+            ...p,
+            slug: p.id,
+            badge:
+              p.rating && p.rating >= 4.5
+                ? "Popular"
+                : p.category === "Rice"
+                ? "Best Seller"
+                : undefined,
+            price: Number(p.price),
+          }));
+
+        setProducts(foods);
+        setError(null);
+      } catch (err) {
+        if (mounted) {
+          setError(
+            "Failed to load products. Make sure the backend is running on http://localhost:8080"
+          );
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const filteredFoods =
     activeCategory === "All Items"
-      ? foods
-      : foods.filter((f) => f.category === activeCategory);
+      ? products
+      : products.filter((f) => f.category === activeCategory);
 
-  const totalPages = Math.ceil(filteredFoods.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredFoods.length / itemsPerPage));
 
   const paginatedFoods = filteredFoods.slice(
     (page - 1) * itemsPerPage,
@@ -124,7 +148,7 @@ export default function MenuCategory() {
     const cartRect = cartRef.current.getBoundingClientRect();
 
     setFlyImage({
-      image: food.image,
+      image: food.imageUrl,
       startX: imgRect.left,
       startY: imgRect.top,
       endX: cartRect.left,
@@ -137,6 +161,7 @@ export default function MenuCategory() {
       desc: food.description,
       price: food.price,
       qty: 1,
+      image: food.imageUrl,
     });
 
     setTimeout(() => setFlyImage(null), 700);
@@ -240,101 +265,144 @@ export default function MenuCategory() {
         </div>
       </div>
 
+      {/* LOADING */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-24 text-white">
+          <Loader2 className="animate-spin text-orange-500 mb-4" size={40} />
+          <p className="text-gray-400">Loading delicious meals...</p>
+        </div>
+      )}
+
+      {/* ERROR */}
+      {!loading && error && (
+        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+          <AlertCircle className="text-red-500 mb-4" size={40} />
+          <p className="text-red-400 font-medium mb-2">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-orange-500 px-6 py-2.5 rounded-full text-white text-sm hover:bg-orange-600 transition"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* EMPTY */}
+      {!loading && !error && products.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+          <p className="text-gray-400 font-medium mb-2">
+            No products available yet.
+          </p>
+          <p className="text-gray-500 text-sm">
+            Please add products to your backend.
+          </p>
+        </div>
+      )}
 
       {/* GRID */}
-      <motion.div
-        key={activeCategory + page}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
-      >
-        {paginatedFoods.map((food) => {
-          const quantity = cart.find((item) => item.id === food.id)?.qty;
+      {!loading && !error && products.length > 0 && (
+        <motion.div
+          key={activeCategory + page}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+        >
+          {paginatedFoods.map((food) => {
+            const quantity = cart.find((item) => item.id === food.id)?.qty;
+            const imageSrc = food.imageUrl || fallbackImages[food.category] || "/images/menu2.png";
 
-          return (
-            <Link key={food.id} href={`/product/${food.slug}`} className="block">
-              <motion.div
-                whileHover={{ y: -6 }}
-                className="food-card bg-[#101414] rounded-2xl overflow-hidden shadow-lg cursor-pointer"
-              >
-                <div className="relative h-48 md:h-52">
-                  <Image
-                    src={food.image}
-                    alt={food.name}
-                    fill
-                    className="object-cover"
-                  />
+            return (
+              <Link key={food.id} href={`/product/${food.id}`} className="block">
+                <motion.div
+                  whileHover={{ y: -6 }}
+                  className="food-card bg-[#101414] rounded-2xl overflow-hidden shadow-lg cursor-pointer"
+                >
+                  <div className="relative h-48 md:h-52">
+                    <Image
+                      src={imageSrc}
+                      alt={food.name}
+                      fill
+                      className="object-cover"
+                    />
 
-                  {food.badge && (
-                    <span className="absolute right-3 top-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
-                      {food.badge}
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-5 md:p-6">
-                  <h3 className="text-white text-lg md:text-xl font-semibold mb-2">
-                    {food.name}
-                  </h3>
-
-                  <p className="text-gray-400 text-sm mb-4">
-                    {food.description}
-                  </p>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-green-500 font-bold text-lg">
-                      ₦{food.price.toLocaleString()}
-                    </span>
-
-                    {!quantity ? (
-                      <button
-                        onClick={(e) => addToCartHandler(food, e)}
-                        className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600 text-sm"
-                      >
-                        <Plus size={16} />
-                        Add
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
-                        <button onClick={(e) => decreaseQty(food.id)}>
-                          <Minus size={16} className="text-white" />
-                        </button>
-
-                        <span className="text-white font-semibold">
-                          {quantity}
-                        </span>
-
-                        <button onClick={(e) => increaseQty(food.id)}>
-                          <Plus size={16} className="text-white" />
-                        </button>
-                      </div>
+                    {food.badge && (
+                      <span className="absolute right-3 top-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
+                        {food.badge}
+                      </span>
                     )}
                   </div>
-                </div>
-              </motion.div>
-            </Link>
-          );
-        })}
-      </motion.div>
+
+                  <div className="p-5 md:p-6">
+                    <h3 className="text-white text-lg md:text-xl font-semibold mb-2">
+                      {food.name}
+                    </h3>
+
+                    <p className="text-gray-400 text-sm mb-4">
+                      {food.description}
+                    </p>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-500 font-bold text-lg">
+                        ₦{food.price.toLocaleString()}
+                      </span>
+
+                      {!quantity ? (
+                        <button
+                          onClick={(e) => addToCartHandler(food, e)}
+                          className="bg-orange-500 px-4 py-2 rounded-full text-white flex items-center gap-2 hover:bg-orange-600 text-sm"
+                        >
+                          <Plus size={16} />
+                          Add
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
+                          <button onClick={(e) => decreaseQty(food.id)}>
+                            <Minus size={16} className="text-white" />
+                          </button>
+
+                          <span className="text-white font-semibold">
+                            {quantity}
+                          </span>
+
+                          <button onClick={(e) => increaseQty(food.id)}>
+                            <Plus size={16} className="text-white" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
+            );
+          })}
+        </motion.div>
+      )}
 
       {/* PAGINATION */}
-      <div className="mt-12 flex justify-between items-center">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage(page - 1)}
-          className="bg-[#101414] px-4 py-2 rounded-full text-white disabled:opacity-40"
-        >
-          <ArrowLeft size={16} />
-        </button>
+      {!loading && !error && filteredFoods.length > itemsPerPage && (
+        <div className="mt-12 flex justify-between items-center">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="bg-[#101414] px-4 py-2 rounded-full text-white disabled:opacity-40"
+          >
+            <ArrowLeft size={16} />
+          </button>
 
-        <button
-          disabled={page === totalPages}
-          onClick={() => setPage(page + 1)}
-          className="bg-orange-500 px-4 py-2 rounded-full text-white disabled:opacity-40"
-        >
-          <ArrowRight size={16} />
-        </button>
-      </div>
+          <span className="text-gray-400 text-sm">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="bg-orange-500 px-4 py-2 rounded-full text-white disabled:opacity-40"
+          >
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      )}
     </section>
   );
 }
+

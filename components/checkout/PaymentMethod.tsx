@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { useState } from "react";
 import { CreditCard, Landmark, CheckCircle, ShieldCheck } from "lucide-react";
+import { useCustomerStore } from "@/lib/customerStore";
 
 // ✅ Animation system
 const container: Variants = {
@@ -27,7 +27,8 @@ const item: Variants = {
 };
 
 export default function PaymentMethod() {
-  const [selected, setSelected] = useState<"card" | "bank">("card");
+  const selected = useCustomerStore((s) => s.paymentMethod);
+  const setSelected = useCustomerStore((s) => s.setPaymentMethod);
 
   return (
     <motion.div
@@ -128,3 +129,4 @@ export default function PaymentMethod() {
     </motion.div>
   );
 }
+

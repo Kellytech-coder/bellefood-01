@@ -1,9 +1,17 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
+import { FiTrash2, FiPlus, FiMinus, FiLoader } from "react-icons/fi";
+import Image from "next/image";
 import { useCartStore } from "@/lib/cartStore";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  getCart,
+  addToCart as apiAddToCart,
+  removeFromCart as apiRemoveFromCart,
+  CartItemApi,
+} from "@/lib/api";
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -27,9 +35,83 @@ export default function CartItems() {
 
   // Zustand store
   const cart = useCartStore((state) => state.cart);
+  const addToCart = useCartStore((state) => state.addToCart);
   const increaseQty = useCartStore((state) => state.increaseQty);
   const decreaseQty = useCartStore((state) => state.decreaseQty);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
+
+  const [syncing, setSyncing] = useState(false);
+  const [synced, setSynced] = useState(false);
+
+  // ✅ LOAD CART FROM BACKEND ON MOUNT (if local cart is empty)
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadRemoteCart() {
+      try {
+        setSyncing(true);
+        const remote: CartItemApi[] = await getCart();
+
+        if (!mounted || !remote || remote.length === 0) return;
+
+        // Merge: only seed if local cart is empty
+        useCartStore.setState((state) => {
+          if (state.cart.length > 0) return {};
+          return {
+            cart: remote.map((item) => ({
+              id: item.productId || item.id,
+              name: item.productName,
+              desc: "",
+              price: Number(item.price),
+              qty: item.quantity,
+              image: item.imageUrl,
+            })),
+          };
+        });
+      } catch {
+        // Backend down — keep local cart
+      } finally {
+        if (mounted) setSyncing(false);
+      }
+    }
+
+    loadRemoteCart();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // ✅ PERSIST TO BACKEND WHEN CART CHANGES (debounced)
+  useEffect(() => {
+    if (synced || syncing) return;
+
+    const timer = setTimeout(async () => {
+      if (cart.length === 0) return;
+
+      try {
+        setSyncing(true);
+
+        for (const item of cart) {
+          await apiAddToCart({
+            productId: item.id,
+            productName: item.name,
+            quantity: item.qty,
+            price: item.price,
+            imageUrl: item.image || "",
+          });
+        }
+
+        setSynced(true);
+      } catch {
+        // Backend down — local state is still the source of truth
+      } finally {
+        setSyncing(false);
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [cart, synced, syncing]);
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * item.qty,
@@ -44,6 +126,16 @@ export default function CartItems() {
     router.push("/checkout");
   };
 
+  const handleRemove = async (id: string) => {
+    removeFromCart(id);
+    // Try to delete from backend (fire and forget)
+    try {
+      await apiRemoveFromCart(id);
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <section className="bg-[#071a14] text-white py-16">
       <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-3 gap-10">
@@ -55,12 +147,19 @@ export default function CartItems() {
           animate="show"
           className="lg:col-span-2 space-y-6"
         >
-          {cart.length === 0 && (
+          {cart.length === 0 && !syncing && (
             <div className="text-center py-20 text-gray-400">
               <p className="text-lg">Your cart is empty 🛒</p>
               <p className="text-sm mt-2">
                 Add delicious meals from the menu
               </p>
+            </div>
+          )}
+
+          {syncing && cart.length === 0 && (
+            <div className="text-center py-20 text-gray-400">
+              <FiLoader className="animate-spin mx-auto text-orange-500 mb-4" size={28} />
+              <p className="text-sm">Loading your cart...</p>
             </div>
           )}
 
@@ -72,7 +171,20 @@ export default function CartItems() {
             >
               {/* ITEM INFO */}
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-400 rounded-xl" />
+                <div className="w-16 h-16 bg-gray-400 rounded-xl overflow-hidden relative">
+                  {item.image ? (
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
+                      {item.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
 
                 <div>
                   <h3 className="text-lg font-semibold">{item.name}</h3>
@@ -107,7 +219,7 @@ export default function CartItems() {
 
                 {/* Remove */}
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => handleRemove(item.id)}
                   className="text-gray-400 hover:text-red-500"
                 >
                   <FiTrash2 />
@@ -165,3 +277,4 @@ export default function CartItems() {
     </section>
   );
 }
+

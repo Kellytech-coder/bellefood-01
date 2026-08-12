@@ -3,37 +3,13 @@
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+
+import { useCartStore } from "@/lib/cartStore";
+import { getProduct, Product } from "@/lib/api";
 
 const MotionDiv = motion.create("div");
-
-const foodData: any = {
-  "jollof-rice": {
-    name: "Party Jollof Rice",
-    price: 4000,
-    image: "/images/menu2.png",
-    description:
-      "Smoky, perfectly seasoned jollof rice with the signature party flavor.",
-  },
-  "fried-rice": {
-    name: "Nigerian Fried Rice",
-    price: 4000,
-    image: "/images/menu2.png",
-    description: "Colorful fried rice loaded with vegetables.",
-  },
-  "coconut-rice": {
-    name: "Coconut Rice",
-    price: 4000,
-    image: "/images/menu2.png",
-    description: "Fragrant coconut-infused rice.",
-  },
-  swallow: {
-    name: "Swallow",
-    price: 3500,
-    image: "/images/menu2.png",
-    description: "Traditional swallow served with rich soup.",
-  },
-};
 
 const proteins = ["Chicken", "Beef", "Fish", "Goat Meat"];
 
@@ -48,27 +24,49 @@ export default function ProductDetail() {
   const router = useRouter();
 
   const slug = params.slug as string;
-  const product = foodData[slug];
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#040D0C] text-white px-4">
-        <p className="mb-4 text-lg text-center">Product not found</p>
-        <button
-          onClick={() => router.push("/menu")}
-          className="bg-orange-500 px-5 py-2 rounded-lg"
-        >
-          Back to Menu
-        </button>
-      </div>
-    );
-  }
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [qty, setQty] = useState(1);
   const [selectedProtein, setSelectedProtein] = useState<string | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+
+  const addToCart = useCartStore((state) => state.addToCart);
+
+  // ✅ FETCH PRODUCT FROM BACKEND
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      try {
+        setLoading(true);
+        const data = await getProduct(slug);
+
+        if (!mounted) return;
+
+        if (data && data.available !== false) {
+          setProduct(data);
+          setError(null);
+        } else {
+          setError("Product not found");
+        }
+      } catch {
+        if (mounted) setError("Product not found");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [slug]);
 
   const toggleExtra = (extraName: string) => {
     setSelectedExtras((prev) =>
@@ -83,19 +81,57 @@ export default function ProductDetail() {
     return sum + (item?.price || 0);
   }, 0);
 
-  const total = (product.price + extrasTotal) * qty;
+  const total = product ? (Number(product.price) + extrasTotal) * qty : 0;
 
   const handleAddToCart = () => {
-    if (!selectedProtein) return;
+    if (!selectedProtein || !product) return;
 
-    setLoading(true);
+    setAdding(true);
 
     setTimeout(() => {
-      setLoading(false);
+      addToCart({
+        id: product.id,
+        name: product.name,
+        desc: product.description,
+        price: Number(product.price),
+        qty,
+        image: product.imageUrl,
+      });
+      setAdding(false);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
-    }, 1000);
+    }, 600);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#040D0C] text-white px-4">
+        <Loader2 className="animate-spin text-orange-500 mb-4" size={40} />
+        <p className="text-gray-400">Loading product...</p>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#040D0C] text-white px-4">
+        <AlertCircle className="text-red-500 mb-4" size={40} />
+        <p className="mb-4 text-lg text-center">
+          {error || "Product not found"}
+        </p>
+        <button
+          onClick={() => router.push("/menu")}
+          className="bg-orange-500 px-5 py-2 rounded-lg"
+        >
+          Back to Menu
+        </button>
+      </div>
+    );
+  }
+
+  const imageSrc =
+    product.imageUrl ||
+    "/images/menu2.png";
 
   return (
     /* ✅ PUSH DOWN TO AVOID NAVBAR OVERLAP */
@@ -106,7 +142,7 @@ export default function ProductDetail() {
         onClick={() => router.push("/menu")}
         className="text-gray-400 mb-6 flex items-center gap-2 hover:text-white transition"
       >
-        ← Back To Menu
+        <ArrowLeft size={16} /> Back To Menu
       </button>
 
       {/* ✅ RESPONSIVE GRID */}
@@ -120,16 +156,18 @@ export default function ProductDetail() {
         >
           <div className="relative">
             <Image
-              src={product.image}
+              src={imageSrc}
               alt={product.name}
               width={700}
               height={550}
               className="rounded-2xl w-full h-[250px] sm:h-[320px] md:h-[420px] object-cover"
             />
 
-            <span className="absolute top-3 right-3 bg-orange-500 text-black px-3 py-1 rounded-full text-xs sm:text-sm">
-              Popular
-            </span>
+            {product.rating && product.rating >= 4.5 && (
+              <span className="absolute top-3 right-3 bg-orange-500 text-black px-3 py-1 rounded-full text-xs sm:text-sm">
+                Popular
+              </span>
+            )}
 
             <div className="absolute bottom-3 left-3 bg-green-600 px-3 py-1 rounded-lg text-xs sm:text-sm">
               ⏱ 30 Minutes Delivery
@@ -173,14 +211,19 @@ export default function ProductDetail() {
           </p>
 
           <div className="text-xs sm:text-sm text-gray-400">
-            ⭐⭐⭐⭐⭐ (4.5 stars) • 1034 orders this week
+            {product.rating ? (
+              <>⭐ {Number(product.rating).toFixed(1)} rating</>
+            ) : (
+              <>⭐⭐⭐⭐⭐ (4.5 stars)</>
+            )}{" "}
+            • {product.category}
           </div>
 
           {/* PRICE */}
           <div className="bg-[#111] p-4 md:p-5 rounded-xl">
             <p className="text-xs text-gray-400">TOTAL PRICE</p>
             <h2 className="text-2xl md:text-3xl text-orange-500 font-bold">
-              ₦{total}
+              ₦{total.toLocaleString()}
             </h2>
           </div>
 
@@ -261,18 +304,18 @@ export default function ProductDetail() {
 
             <button
               onClick={handleAddToCart}
-              disabled={!selectedProtein || loading}
+              disabled={!selectedProtein || adding}
               className={`mt-4 w-full py-3 rounded-xl text-sm font-semibold transition ${
                 selectedProtein
                   ? "bg-orange-500 hover:bg-orange-600"
                   : "bg-gray-600 cursor-not-allowed"
               }`}
             >
-              {loading
+              {adding
                 ? "Adding..."
                 : added
                 ? "✅ Added!"
-                : `🛒 Add to cart - ₦${total}`}
+                : `🛒 Add to cart - ₦${total.toLocaleString()}`}
             </button>
           </div>
         </MotionDiv>
@@ -280,3 +323,4 @@ export default function ProductDetail() {
     </div>
   );
 }
+

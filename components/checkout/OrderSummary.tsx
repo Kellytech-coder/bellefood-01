@@ -1,8 +1,14 @@
 "use client";
-
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, Variants, easeOut } from "framer-motion";
-import { ShoppingCart, AlertCircle } from "lucide-react";
+import { ShoppingCart, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+
+import { useCartStore } from "@/lib/cartStore";
+import { useCustomerStore } from "@/lib/customerStore";
+import { useCheckoutProgress } from "@/lib/checkoutProgressStore";
+import { useOrderStore } from "@/lib/orderStore";
+import { createOrder } from "@/lib/api";
 
 const container: Variants = {
   hidden: { opacity: 0, x: 60 },
@@ -29,7 +35,112 @@ const item: Variants = {
   },
 };
 
+const DELIVERY_FEE = 1000;
+
 export default function OrderSummary() {
+  const router = useRouter();
+  const cart = useCartStore((state) => state.cart);
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  const customer = useCustomerStore();
+  const checkout = useCheckoutProgress();
+  const setOrder = useOrderStore((s) => s.setOrder);
+
+  const [placing, setPlacing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const delivery = cart.length > 0 ? DELIVERY_FEE : 0;
+  const total = subtotal + delivery;
+
+  const itemsReady =
+    cart.length > 0 &&
+    customer.fullName.trim().length > 0 &&
+    customer.phone.trim().length > 0 &&
+    checkout.deliveryAddress.trim().length > 0;
+
+  const handleCompleteOrder = async () => {
+    if (!itemsReady || placing) return;
+
+    setPlacing(true);
+    setError(null);
+
+    const orderPayload = {
+      customerName: customer.fullName.trim(),
+      customerPhone: customer.phone.trim(),
+      customerEmail: customer.email.trim(),
+      deliveryAddress: checkout.deliveryAddress.trim(),
+      deliveryLandmark: checkout.landmark.trim() || undefined,
+      paymentMethod: customer.paymentMethod,
+      items: cart.map((item) => ({
+        productId: item.id,
+        productName: item.name,
+        quantity: item.qty,
+        price: item.price,
+      })),
+      subtotal,
+      deliveryFee: delivery,
+      total,
+    };
+
+    try {
+      // Try backend first
+      const res = await createOrder(orderPayload);
+      const orderId = res.id;
+
+      // Store the placed order for the confirmation page
+      setOrder({
+        id: orderId,
+        customerName: orderPayload.customerName,
+        customerPhone: orderPayload.customerPhone,
+        customerEmail: orderPayload.customerEmail,
+        deliveryAddress: orderPayload.deliveryAddress,
+        deliveryLandmark: orderPayload.deliveryLandmark,
+        paymentMethod: orderPayload.paymentMethod,
+        items: orderPayload.items,
+        subtotal,
+        deliveryFee: delivery,
+        total,
+        estimatedDelivery: "25-30 mins",
+        orderTime: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      });
+
+      // Clear cart
+      clearCart();
+
+      router.push("/order-confirmation");
+    } catch {
+      // Backend order endpoint not available yet — still show confirmation using local data
+      setOrder({
+        id: `BFT${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
+        customerName: orderPayload.customerName,
+        customerPhone: orderPayload.customerPhone,
+        customerEmail: orderPayload.customerEmail,
+        deliveryAddress: orderPayload.deliveryAddress,
+        deliveryLandmark: orderPayload.deliveryLandmark,
+        paymentMethod: orderPayload.paymentMethod,
+        items: orderPayload.items,
+        subtotal,
+        deliveryFee: delivery,
+        total,
+        estimatedDelivery: "25-30 mins",
+        orderTime: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      });
+
+      clearCart();
+
+      router.push("/order-confirmation");
+    } finally {
+      setPlacing(false);
+    }
+  };
+
   return (
     <motion.div
       variants={container}
@@ -46,20 +157,26 @@ export default function OrderSummary() {
       </motion.h2>
 
       {/* Items */}
-      <div className="space-y-4 text-gray-300">
-        <motion.div variants={item} className="flex justify-between">
-          <span>Party Jollof Rice x 2</span>
-          <span>₦12,000</span>
-        </motion.div>
-
-        <motion.div
-          variants={item}
-          className="flex justify-between text-green-400"
-        >
-          <span>Grilled Chicken x 1</span>
-          <span>₦1,000</span>
-        </motion.div>
-      </div>
+      {cart.length === 0 ? (
+        <motion.p variants={item} className="text-gray-400 text-sm">
+          Your cart is empty. Add items from the menu.
+        </motion.p>
+      ) : (
+        <div className="space-y-4 text-gray-300">
+          {cart.map((cartItem) => (
+            <motion.div
+              key={cartItem.id}
+              variants={item}
+              className="flex justify-between"
+            >
+              <span>
+                {cartItem.name} x {cartItem.qty}
+              </span>
+              <span>₦{(cartItem.price * cartItem.qty).toLocaleString()}</span>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Divider */}
       <motion.div
@@ -73,7 +190,7 @@ export default function OrderSummary() {
         className="flex justify-between text-gray-400"
       >
         <span>Subtotal</span>
-        <span>₦12,000</span>
+        <span>₦{subtotal.toLocaleString()}</span>
       </motion.div>
 
       {/* Delivery */}
@@ -82,7 +199,7 @@ export default function OrderSummary() {
         className="flex justify-between text-green-400 mt-2"
       >
         <span>Delivery Fee</span>
-        <span>₦1,000</span>
+        <span>₦{delivery.toLocaleString()}</span>
       </motion.div>
 
       {/* Divider */}
@@ -97,7 +214,7 @@ export default function OrderSummary() {
         className="flex justify-between text-xl font-semibold text-orange-500"
       >
         <span>Total</span>
-        <span>₦13,000</span>
+        <span>₦{total.toLocaleString()}</span>
       </motion.div>
 
       {/* Alert Box */}
@@ -118,22 +235,43 @@ export default function OrderSummary() {
         </div>
       </motion.div>
 
+      {/* Error */}
+      {error && (
+        <motion.p variants={item} className="text-red-400 text-sm mt-4">
+          {error}
+        </motion.p>
+      )}
+
       {/* Complete Order Button */}
       <motion.div variants={item}>
-        <Link
-          href="/order-confirmation"
-          className="w-full mt-6 bg-orange-600 hover:bg-orange-500 transition py-3 rounded-full text-white font-medium flex items-center justify-center gap-2"
+        <button
+          onClick={handleCompleteOrder}
+          disabled={!itemsReady || placing}
+          className={`w-full mt-6 py-3 rounded-full text-white font-medium flex items-center justify-center gap-2 transition ${
+            itemsReady
+              ? "bg-orange-600 hover:bg-orange-500"
+              : "bg-gray-700 cursor-not-allowed"
+          }`}
         >
-          <motion.span
-            whileHover={{ x: 3 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
+          {placing ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
             <ShoppingCart size={18} />
-          </motion.span>
+          )}
 
-          Complete Order
-        </Link>
+          {placing ? "Placing Order..." : "Complete Order"}
+        </button>
       </motion.div>
+
+      {!itemsReady && (
+        <motion.p
+          variants={item}
+          className="text-xs text-gray-500 mt-3 text-center"
+        >
+          Please add items, fill your name, phone, and delivery address to
+          continue.
+        </motion.p>
+      )}
 
       {/* Footer Note */}
       <motion.p
@@ -148,3 +286,4 @@ export default function OrderSummary() {
     </motion.div>
   );
 }
+

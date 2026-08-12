@@ -6,11 +6,15 @@ import {
   MapPin,
   Phone,
   ArrowRight,
+  Mail,
 } from "lucide-react";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
-const items = [
+import { useOrderStore } from "@/lib/orderStore";
+
+const fallbackItems = [
   {
     name: "Party Jollof Rice",
     qty: 2,
@@ -29,6 +33,25 @@ const items = [
 ];
 
 export default function OrderSuccess() {
+  const router = useRouter();
+  const order = useOrderStore((s) => s.order);
+
+  const items =
+    order && order.items.length > 0
+      ? order.items.map((item) => ({
+          name: item.productName,
+          qty: item.quantity,
+          price: `₦${(item.price * item.quantity).toLocaleString()}`,
+        }))
+      : fallbackItems;
+
+  const orderId = order?.id || "BFT9YHCC80";
+  const total = order ? order.total : 13500;
+  const deliveryTime = order?.estimatedDelivery || "25-30 mins";
+  const deliveryAddress = order?.deliveryAddress || "24 Admiralty Way, Lekki Phase 1, Lagos";
+  const customerPhone = order?.customerPhone || "+234 800 123 4567";
+  const customerEmail = order?.customerEmail || "customer@example.com";
+
   return (
     <main className="min-h-screen bg-[#050B08] flex justify-center py-14 px-5 overflow-hidden">
 
@@ -86,7 +109,7 @@ export default function OrderSuccess() {
           </p>
 
           <h2 className="text-center text-4xl font-bold text-orange-500 mt-3 tracking-wider">
-            BFT9YHCC80
+            {orderId}
           </h2>
 
         </motion.div>
@@ -118,12 +141,14 @@ export default function OrderSuccess() {
           </div>
 
           <h2 className="text-5xl font-bold text-white mt-4">
-            25-30 mins
+            {deliveryTime}
           </h2>
 
-          <p className="text-white/90 mt-2">
-            3:45 PM - 4:10 PM
-          </p>
+          {order?.orderTime && (
+            <p className="text-white/90 mt-2">
+              Ordered at {order.orderTime}
+            </p>
+          )}
 
         </motion.div>
 
@@ -171,14 +196,14 @@ export default function OrderSuccess() {
             </span>
 
             <span className="text-4xl font-bold text-orange-500">
-              ₦13,500
+              ₦{total.toLocaleString()}
             </span>
 
           </div>
 
         </motion.div>
 
-        {/* Delivery */}
+        {/* Delivery Information */}
 
         <motion.div
           whileHover={{y:-4}}
@@ -201,9 +226,7 @@ export default function OrderSuccess() {
                 </p>
 
                 <h3 className="text-white font-medium">
-                  24 Admiralty Way,
-                  Lekki Phase 1,
-                  Lagos
+                  {deliveryAddress}
                 </h3>
 
               </div>
@@ -221,12 +244,32 @@ export default function OrderSuccess() {
                 </p>
 
                 <h3 className="text-white">
-                  +234 800 123 4567
+                  {customerPhone}
                 </h3>
 
               </div>
 
             </div>
+
+            {customerEmail && customerEmail !== "customer@example.com" && (
+              <div className="flex gap-4">
+
+                <Mail className="text-orange-500"/>
+
+                <div>
+
+                  <p className="text-gray-400">
+                    Customer Email
+                  </p>
+
+                  <h3 className="text-white">
+                    {customerEmail}
+                  </h3>
+
+                </div>
+
+              </div>
+            )}
 
           </div>
 
@@ -243,6 +286,7 @@ export default function OrderSuccess() {
             whileTap={{
               scale:.95
             }}
+            onClick={() => router.push("/")}
             className="h-14 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-semibold flex justify-center items-center gap-2 shadow-xl"
           >
             Track Order
@@ -256,6 +300,7 @@ export default function OrderSuccess() {
             whileTap={{
               scale:.95
             }}
+            onClick={() => router.push("/menu")}
             className="h-14 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/10 transition"
           >
             Order Again
@@ -280,3 +325,4 @@ export default function OrderSuccess() {
     </main>
   );
 }
+

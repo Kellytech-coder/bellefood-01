@@ -1,11 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-const categories = [
+import { getMenu, MenuItem } from "@/lib/api";
+
+const fallbackCategories = [
   { title: "Rice", image: "/images/cat-rice1.png" },
   { title: "Swallow", image: "/images/cat-swallow1.png" },
   { title: "Proteins", image: "/images/cat-turkey1.png" },
@@ -14,14 +17,52 @@ const categories = [
   { title: "Snacks", image: "/images/cat-snack1.png" },
   { title: "Soups", image: "/images/cat-soup1.png" },
   { title: "Grills", image: "/images/cat-grill1.png" },
-  { title: "Desserts", image: "/images/cat-jellof1.png" },
-  { title: "Specials", image: "/images/cat-specials1.png" },
 ];
 
 export default function Categories() {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(4);
+  const [categories, setCategories] = useState<
+    { title: string; image: string; id?: string }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ FETCH CATEGORIES FROM BACKEND MENU
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      try {
+        const data: MenuItem[] = await getMenu();
+
+        if (!mounted) return;
+
+        if (data && data.length > 0) {
+          const cats = data.map((item, i) => ({
+            title: item.name,
+            image:
+              item.imageUrl ||
+              fallbackCategories[i % fallbackCategories.length].image,
+            id: item.id,
+          }));
+          setCategories(cats);
+        } else {
+          setCategories(fallbackCategories);
+        }
+      } catch {
+        if (mounted) setCategories(fallbackCategories);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // ✅ Responsive cards count
   useEffect(() => {
@@ -36,7 +77,7 @@ export default function Categories() {
     return () => window.removeEventListener("resize", updateView);
   }, []);
 
-  const maxIndex = categories.length - cardsPerView;
+  const maxIndex = Math.max(0, categories.length - cardsPerView);
 
   const next = () => {
     setIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
@@ -71,64 +112,77 @@ export default function Categories() {
             </p>
           </div>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="self-start border border-orange-500 px-5 py-2 text-sm rounded-full hover:bg-orange-500 transition"
-          >
-            View All
-          </button>
+          {categories.length > 0 && (
+            <button
+              onClick={() => setOpen(true)}
+              className="self-start border border-orange-500 px-5 py-2 text-sm rounded-full hover:bg-orange-500 transition"
+            >
+              View All
+            </button>
+          )}
         </motion.div>
 
-        {/* CAROUSEL */}
-        <div className="relative overflow-hidden">
-
-          {/* TRACK */}
-          <motion.div
-            animate={{ x: `-${index * (100 / cardsPerView)}%` }}
-            transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            className="flex"
-          >
-            {categories.map((item, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.03 }}
-                className="flex-shrink-0 px-2"
-                style={{ width: `${100 / cardsPerView}%` }}
-              >
-                <div className="relative w-full h-[180px] sm:h-[200px] md:h-[220px] rounded-2xl overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/20" />
-                </div>
-
-                <p className="mt-2 text-sm md:text-lg font-medium">
-                  {item.title}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* CONTROLS */}
-          <div className="flex gap-3 justify-end mt-6">
-            <button
-              onClick={prev}
-              className="bg-white/10 p-2 md:p-3 rounded-full hover:bg-white/20"
-            >
-              <ChevronLeft size={18} />
-            </button>
-
-            <button
-              onClick={next}
-              className="bg-white/10 p-2 md:p-3 rounded-full hover:bg-white/20"
-            >
-              <ChevronRight size={18} />
-            </button>
+        {/* LOADING */}
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="animate-spin text-orange-500" size={30} />
           </div>
-        </div>
+        )}
+
+        {/* CAROUSEL */}
+        {!loading && categories.length > 0 && (
+          <div className="relative overflow-hidden">
+
+            {/* TRACK */}
+            <motion.div
+              animate={{ x: `-${index * (100 / cardsPerView)}%` }}
+              transition={{ type: "spring", stiffness: 100, damping: 20 }}
+              className="flex"
+            >
+              {categories.map((item, i) => (
+                <motion.div
+                  key={item.id || item.title}
+                  whileHover={{ scale: 1.03 }}
+                  className="flex-shrink-0 px-2"
+                  style={{ width: `${100 / cardsPerView}%` }}
+                >
+                  <Link href="/menu">
+                    <div className="relative w-full h-[180px] sm:h-[200px] md:h-[220px] rounded-2xl overflow-hidden">
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+                  </Link>
+
+                  <p className="mt-2 text-sm md:text-lg font-medium">
+                    {item.title}
+                  </p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* CONTROLS */}
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={prev}
+                className="bg-white/10 p-2 md:p-3 rounded-full hover:bg-white/20"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <button
+                onClick={next}
+                className="bg-white/10 p-2 md:p-3 rounded-full hover:bg-white/20"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODAL */}
@@ -160,18 +214,20 @@ export default function Categories() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
                 {categories.map((item, i) => (
                   <motion.div
-                    key={i}
+                    key={item.id || item.title}
                     whileHover={{ scale: 1.05 }}
                     className="cursor-pointer"
                   >
-                    <div className="relative h-[120px] md:h-[150px] rounded-xl overflow-hidden">
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+                    <Link href="/menu">
+                      <div className="relative h-[120px] md:h-[150px] rounded-xl overflow-hidden">
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </Link>
                     <p className="mt-2 text-xs md:text-sm">
                       {item.title}
                     </p>
@@ -185,3 +241,4 @@ export default function Categories() {
     </section>
   );
 }
+
