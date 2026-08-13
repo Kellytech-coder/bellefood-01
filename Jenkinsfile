@@ -1,4 +1,5 @@
 pipeline {
+
     agent any
 
     environment {
@@ -10,18 +11,37 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Kellytech-coder/bellefood-01.git'
+                deleteDir()
+
+                bat '''
+                    git config --global http.version HTTP/1.1
+                    git config --global core.compression 0
+                '''
+
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/Kellytech-coder/bellefood-01.git'
+                    ]],
+                    extensions: [
+                        [$class: 'CloneOption',
+                         shallow: true,
+                         depth: 1,
+                         noTags: true,
+                         timeout: 20]
+                    ]
+                ])
             }
         }
 
-        stage('Install') {
+        stage('Install Dependencies') {
             steps {
                 bat 'npm ci'
             }
         }
 
-        stage('Build') {
+        stage('Build Frontend') {
             steps {
                 bat 'npm run build'
             }
@@ -36,6 +56,7 @@ pipeline {
 
         stage('Docker Push') {
             steps {
+
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-credentials',
@@ -43,8 +64,11 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-                    bat 'docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%'
+
+                    bat 'echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin'
+
                     bat 'docker push %DOCKER_IMAGE%:%IMAGE_TAG%'
+
                     bat 'docker push %DOCKER_IMAGE%:latest'
                 }
             }
@@ -52,12 +76,17 @@ pipeline {
     }
 
     post {
+
         success {
-            echo 'BelleFood frontend deployed successfully.'
+            echo 'BelleFood frontend deployment completed successfully!'
         }
 
         failure {
             echo 'BelleFood frontend deployment failed.'
+        }
+
+        always {
+            echo "Build number: ${BUILD_NUMBER}"
         }
     }
 }
