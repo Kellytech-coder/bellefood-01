@@ -101,7 +101,7 @@ export default function MenuCategory() {
       } catch (err) {
         if (mounted) {
           setError(
-            "Failed to load products. Make sure the backend is running on http://localhost:8080"
+            "Failed to load products. Make sure the backend is running on http://localhost:8083"
           );
         }
       } finally {
