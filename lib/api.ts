@@ -1,4 +1,30 @@
-const API_URL = "http://localhost:8083/api";
+const API_URL = "/api/backend";
+
+async function fetchResponse(path: string, init?: RequestInit): Promise<Response> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, init);
+  } catch {
+    throw new Error("Could not reach the BelleFood server. Check your connection and try again.");
+  }
+
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}). Please try again.`);
+  }
+
+  return response;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetchResponse(path, init);
+  return response.json() as Promise<T>;
+}
+
+async function requestText(path: string, init?: RequestInit): Promise<string> {
+  const response = await fetchResponse(path, init);
+  return response.text();
+}
 
 export type Product = {
   id: string;
@@ -48,43 +74,19 @@ export type OrderInput = {
 };
 
 export async function getProducts(): Promise<Product[]> {
-  const response = await fetch(`${API_URL}/products`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return response.json();
+  return request<Product[]>("/products");
 }
 
 export async function getProduct(id: string): Promise<Product> {
-  const response = await fetch(`${API_URL}/products/${id}`);
-
-  if (!response.ok) {
-    throw new Error("Product not found");
-  }
-
-  return response.json();
+  return request<Product>(`/products/${encodeURIComponent(id)}`);
 }
 
 export async function getMenu(): Promise<MenuItem[]> {
-  const response = await fetch(`${API_URL}/menu`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch menu");
-  }
-
-  return response.json();
+  return request<MenuItem[]>("/menu");
 }
 
 export async function getCart(): Promise<CartItemApi[]> {
-  const response = await fetch(`${API_URL}/cart`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch cart");
-  }
-
-  return response.json();
+  return request<CartItemApi[]>("/cart");
 }
 
 export async function addToCart(item: {
@@ -94,46 +96,28 @@ export async function addToCart(item: {
   price: number;
   imageUrl: string;
 }): Promise<string> {
-  const response = await fetch(`${API_URL}/cart`, {
+  return requestText("/cart", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(item),
   });
-
-  if (!response.ok) {
-    throw new Error("Failed to add item to cart");
-  }
-
-  return response.text();
 }
 
 export async function removeFromCart(id: string): Promise<string> {
-  const response = await fetch(`${API_URL}/cart/${id}`, {
+  return requestText(`/cart/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
-
-  if (!response.ok) {
-    throw new Error("Failed to remove item from cart");
-  }
-
-  return response.text();
 }
 
 export async function createOrder(order: OrderInput): Promise<{ id: string }> {
-  const response = await fetch(`${API_URL}/orders`, {
+  return request<{ id: string }>("/orders", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(order),
   });
-
-  if (!response.ok) {
-    throw new Error("Failed to place order");
-  }
-
-  return response.json();
 }
 

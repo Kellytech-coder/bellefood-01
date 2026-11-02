@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: bellefood-frontend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: BACKEND_API_URL
+        sync: false

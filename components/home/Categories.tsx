@@ -102,7 +102,7 @@ export default function Categories() {
 
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-semibold leading-tight">
               What Are{" "}
-              <span className="text-orange-500">You Craving</span>
+              <span className="text-orange-500">Your Cravings</span>
               <br />
               <span className="text-orange-500">Today?</span>
             </h2>
@@ -139,7 +139,7 @@ export default function Categories() {
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
               className="flex"
             >
-              {categories.map((item, i) => (
+              {categories.map((item) => (
                 <motion.div
                   key={item.id || item.title}
                   whileHover={{ scale: 1.03 }}
@@ -212,7 +212,7 @@ export default function Categories() {
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-                {categories.map((item, i) => (
+                {categories.map((item) => (
                   <motion.div
                     key={item.id || item.title}
                     whileHover={{ scale: 1.05 }}

@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { motion, useAnimation } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+type Partner = (typeof partners)[number];
 
 const partners = [
   { name: "Glovo", logo: "/images/glovo1.png" },
@@ -14,7 +16,7 @@ const partners = [
 export default function Partners() {
   const controls = useAnimation();
 
-  const start = () => {
+  const start = useCallback(() => {
     controls.start({
       x: ["0%", "-50%"],
       transition: {
@@ -23,14 +25,14 @@ export default function Partners() {
         ease: "linear",
       },
     });
-  };
+  }, [controls]);
 
   const stop = () => controls.stop();
 
   // ✅ start automatically
   useEffect(() => {
     start();
-  }, []);
+  }, [start]);
 
   return (
     <section className="relative bg-[#071311] py-12 sm:py-16 md:py-24 overflow-x-hidden">
@@ -77,7 +79,7 @@ export default function Partners() {
   );
 }
 
-function LogoItem({ partner }: any) {
+function LogoItem({ partner }: { partner: Partner }) {
   const [loaded, setLoaded] = useState(false);
 
   return (

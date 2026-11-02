@@ -1,23 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "bellefood",
-  description: "Food-delivery",
+  title: {
+    default: "BelleFood | Nigerian food, delivered",
+    template: "%s | BelleFood",
+  },
+  description:
+    "Order freshly prepared Nigerian meals, signature dishes, and party platters from BelleFood.",
 };
 
 export default function RootLayout({
@@ -26,23 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-x-hidden`}
-    >
-      <body className="min-h-full flex flex-col overflow-x-hidden">
-        
-        {/* Navbar */}
+    <html lang="en" className="h-full antialiased overflow-x-hidden">
+      <body className="min-h-full flex flex-col">
         <Navbar />
-
-        {/* Page Content */}
-        <main className="flex-1 w-full overflow-x-hidden">
+        <main id="main-content" className="flex-1 w-full">
           {children}
         </main>
-
-        {/* Footer */}
         <Footer />
-
       </body>
     </html>
   );

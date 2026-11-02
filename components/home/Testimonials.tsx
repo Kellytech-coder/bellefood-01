@@ -3,13 +3,14 @@
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 const testimonials = [
   {
     text: `"A customer testimonial that highlights features and answers potential customer doubts about your product or service."`,
     name: "Customer Name",
     role: "Position, Company name",
-    image: "/images/user1.jpg",
+    image: "/images/avatar1.png",
     video: "/videos/test1.mp4",
     poster:"/images/videos/thumb1-jpg",
   },
@@ -129,9 +130,11 @@ export default function Testimonials() {
 
                 <div className="flex items-center justify-between mt-5">
                   <div className="flex items-center gap-3">
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>

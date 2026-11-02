@@ -39,12 +39,64 @@ const categories = [
 
 // Fallback image mapping when backend imageUrl is missing
 const fallbackImages: Record<string, string> = {
-  Rice: "/images/menu2.png",
-  Swallow: "/images/menu2.png",
-  Proteins: "/images/cat-turkey1.png",
-  Platters: "/images/platter1.png",
-  Drinks: "/images/cat-drink1.png",
+  rice: "/images/menu2.png",
+  swallow: "/images/cat-swallow1.png",
+  protein: "/images/cat-turkey1.png",
+  proteins: "/images/cat-turkey1.png",
+  platter: "/images/platter1.png",
+  platters: "/images/platter1.png",
+  drink: "/images/cat-drink1.png",
+  drinks: "/images/cat-drink1.png",
+  soup: "/images/cat-soup1.png",
+  soups: "/images/cat-soup1.png",
+  snack: "/images/cat-snack1.png",
+  snacks: "/images/cat-snack1.png",
+  grill: "/images/cat-grill1.png",
+  grills: "/images/cat-grill1.png",
 };
+
+const DEFAULT_FOOD_IMAGE = "/images/menu2.png";
+
+function getFallbackImage(category: string) {
+  return fallbackImages[category.trim().toLowerCase()] ?? DEFAULT_FOOD_IMAGE;
+}
+
+function getImageSource(imageUrl: string | null | undefined) {
+  const source = imageUrl?.trim();
+  if (!source) return null;
+
+  if (/^https?:\/\//i.test(source) || source.startsWith("/")) {
+    return source;
+  }
+
+  return `/api/backend/${source}`;
+}
+
+function FoodImage({
+  src,
+  fallbackSrc,
+  alt,
+}: {
+  src: string | null;
+  fallbackSrc: string;
+  alt: string;
+}) {
+  const [imageSrc, setImageSrc] = useState(src ?? fallbackSrc);
+
+  useEffect(() => {
+    setImageSrc(src ?? fallbackSrc);
+  }, [src, fallbackSrc]);
+
+  return (
+    <Image
+      src={imageSrc}
+      alt={alt}
+      fill
+      className="object-cover"
+      onError={() => setImageSrc(fallbackSrc)}
+    />
+  );
+}
 
 export default function MenuCategory() {
   const [activeCategory, setActiveCategory] = useState("All Items");
@@ -98,10 +150,12 @@ export default function MenuCategory() {
 
         setProducts(foods);
         setError(null);
-      } catch (err) {
+      } catch (reason) {
         if (mounted) {
           setError(
-            "Failed to load products. Make sure the backend is running on http://localhost:8083"
+            reason instanceof Error
+              ? reason.message
+              : "Could not load products. Please try again."
           );
         }
       } finally {
@@ -147,8 +201,10 @@ export default function MenuCategory() {
     const imgRect = img.getBoundingClientRect();
     const cartRect = cartRef.current.getBoundingClientRect();
 
+    const displayedImage = img.currentSrc || getFallbackImage(food.category);
+
     setFlyImage({
-      image: food.imageUrl,
+      image: displayedImage,
       startX: imgRect.left,
       startY: imgRect.top,
       endX: cartRect.left,
@@ -161,7 +217,7 @@ export default function MenuCategory() {
       desc: food.description,
       price: food.price,
       qty: 1,
-      image: food.imageUrl,
+      image: displayedImage,
     });
 
     setTimeout(() => setFlyImage(null), 700);
@@ -309,7 +365,8 @@ export default function MenuCategory() {
         >
           {paginatedFoods.map((food) => {
             const quantity = cart.find((item) => item.id === food.id)?.qty;
-            const imageSrc = food.imageUrl || fallbackImages[food.category] || "/images/menu2.png";
+            const imageSrc = getImageSource(food.imageUrl);
+            const fallbackImage = getFallbackImage(food.category);
 
             return (
               <Link key={food.id} href={`/product/${food.id}`} className="block">
@@ -318,11 +375,10 @@ export default function MenuCategory() {
                   className="food-card bg-[#101414] rounded-2xl overflow-hidden shadow-lg cursor-pointer"
                 >
                   <div className="relative h-48 md:h-52">
-                    <Image
+                    <FoodImage
                       src={imageSrc}
+                      fallbackSrc={fallbackImage}
                       alt={food.name}
-                      fill
-                      className="object-cover"
                     />
 
                     {food.badge && (
@@ -356,7 +412,7 @@ export default function MenuCategory() {
                         </button>
                       ) : (
                         <div className="flex items-center gap-3 bg-orange-500 px-3 py-2 rounded-full">
-                          <button onClick={(e) => decreaseQty(food.id)}>
+                          <button onClick={() => decreaseQty(food.id)}>
                             <Minus size={16} className="text-white" />
                           </button>
 
@@ -364,7 +420,7 @@ export default function MenuCategory() {
                             {quantity}
                           </span>
 
-                          <button onClick={(e) => increaseQty(food.id)}>
+                          <button onClick={() => increaseQty(food.id)}>
                             <Plus size={16} className="text-white" />
                           </button>
                         </div>

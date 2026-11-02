@@ -16,7 +16,6 @@ export default function CheckoutHeader() {
   const progressState = useCheckoutProgress();
   const progress = computeCheckoutProgressPercent(progressState);
 
-  const currentStep = steps.length - 1;
   const completedCount = progressState.selectedDeliveryOption ? 1 : 0;
   const deliveryAddressDone = progressState.deliveryAddress.trim().length > 0;
   const landmarkDone = progressState.landmark.trim().length > 0;

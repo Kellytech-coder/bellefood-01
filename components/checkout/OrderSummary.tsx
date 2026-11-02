@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { motion, Variants, easeOut } from "framer-motion";
-import { ShoppingCart, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { useCartStore } from "@/lib/cartStore";
@@ -86,6 +86,9 @@ export default function OrderSummary() {
     try {
       // Try backend first
       const res = await createOrder(orderPayload);
+      if (!res.id) {
+        throw new Error("The server did not return an order number. Please contact support before retrying.");
+      }
       const orderId = res.id;
 
       // Store the placed order for the confirmation page
@@ -112,30 +115,12 @@ export default function OrderSummary() {
       clearCart();
 
       router.push("/order-confirmation");
-    } catch {
-      // Backend order endpoint not available yet — still show confirmation using local data
-      setOrder({
-        id: `BFT${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
-        customerName: orderPayload.customerName,
-        customerPhone: orderPayload.customerPhone,
-        customerEmail: orderPayload.customerEmail,
-        deliveryAddress: orderPayload.deliveryAddress,
-        deliveryLandmark: orderPayload.deliveryLandmark,
-        paymentMethod: orderPayload.paymentMethod,
-        items: orderPayload.items,
-        subtotal,
-        deliveryFee: delivery,
-        total,
-        estimatedDelivery: "25-30 mins",
-        orderTime: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      });
-
-      clearCart();
-
-      router.push("/order-confirmation");
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "We could not place your order. Please try again."
+      );
     } finally {
       setPlacing(false);
     }

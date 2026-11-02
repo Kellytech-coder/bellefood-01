@@ -35,7 +35,6 @@ export default function CartItems() {
 
   // Zustand store
   const cart = useCartStore((state) => state.cart);
-  const addToCart = useCartStore((state) => state.addToCart);
   const increaseQty = useCartStore((state) => state.increaseQty);
   const decreaseQty = useCartStore((state) => state.decreaseQty);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
