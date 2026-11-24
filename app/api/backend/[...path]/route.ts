@@ -11,7 +11,10 @@ type RouteContext = {
 async function proxyRequest(request: Request, context: RouteContext) {
   const { path } = await context.params;
   const incomingUrl = new URL(request.url);
-  const targetUrl = `${BACKEND_API_URL}/${path.map(encodeURIComponent).join("/")}${incomingUrl.search}`;
+  const backendBase = /^https?:\/\//i.test(BACKEND_API_URL)
+    ? BACKEND_API_URL
+    : `http://${BACKEND_API_URL}`;
+  const targetUrl = `${backendBase}/${path.map(encodeURIComponent).join("/")}${incomingUrl.search}`;
   const headers = new Headers();
 
   for (const header of ["accept", "authorization", "content-type", "cookie"]) {
@@ -45,7 +48,7 @@ async function proxyRequest(request: Request, context: RouteContext) {
   } catch {
     return Response.json(
       { message: "The BelleFood backend is unavailable. Check BACKEND_API_URL and confirm the backend is running." },
-      { status: 502 }
+      { status: 502 },
     );
   }
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   ShoppingCart,
   Menu,
@@ -11,9 +12,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/cartStore";
 import { useEffect, useState } from "react";
 
-const navItems = ["Home", "Menu", "Track Orders", "About Us"];
+const navItems = ["Home", "Menu", "Track Orders", "Support", "About Us"];
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState<string | null>("Home");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,10 +33,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  if (pathname.startsWith("/admin")) return null;
+
   const getHref = (item: string) => {
     if (item === "Home") return "/";
     if (item === "Menu") return "/menu";
     if (item === "Track Orders") return "/#track";
+    if (item === "Support") return "/complaints";
     if (item === "About Us") return "/#about";
    
     return "/";

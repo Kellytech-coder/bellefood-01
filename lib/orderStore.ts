@@ -15,6 +15,7 @@ export type PlacedOrder = {
   deliveryAddress: string;
   deliveryLandmark?: string;
   paymentMethod: "card" | "bank";
+  paymentStatus: "pending" | "paid";
   items: PlacedOrderItem[];
   subtotal: number;
   deliveryFee: number;

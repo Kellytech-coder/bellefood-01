@@ -100,6 +100,7 @@ export default function OrderSummary() {
         deliveryAddress: orderPayload.deliveryAddress,
         deliveryLandmark: orderPayload.deliveryLandmark,
         paymentMethod: orderPayload.paymentMethod,
+        paymentStatus: res.paymentStatus,
         items: orderPayload.items,
         subtotal,
         deliveryFee: delivery,

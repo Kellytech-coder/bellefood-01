@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, Variants } from "framer-motion";
 
 import {
@@ -13,6 +14,7 @@ import {
 } from "react-icons/fa6";
 
 export default function Footer() {
+  const pathname = usePathname();
   const MotionLink = motion(Link);
 
   const container: Variants = {
@@ -28,6 +30,8 @@ export default function Footer() {
     },
   };
 
+  if (pathname.startsWith("/admin")) return null;
+
   const item: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
@@ -35,6 +39,7 @@ export default function Footer() {
 
   const quickLinks = [
     { name: "Menu", href: "/menu" },
+    { name: "Customer support", href: "/complaints" },
     { name: "Track Order", href: "/track-order" },
     { name: "About Us", href: "/about" },
     { name: "Delivery", href: "/delivery" },

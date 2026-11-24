@@ -105,19 +105,45 @@ export async function addToCart(item: {
   });
 }
 
+export async function replaceCart(
+  items: Array<{ productId: string; quantity: number }>,
+): Promise<CartItemApi[]> {
+  return request<CartItemApi[]>("/cart", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+}
+
 export async function removeFromCart(id: string): Promise<string> {
   return requestText(`/cart/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
 }
 
-export async function createOrder(order: OrderInput): Promise<{ id: string }> {
-  return request<{ id: string }>("/orders", {
+export async function createOrder(
+  order: OrderInput,
+): Promise<{ id: string; paymentStatus: "pending" | "paid" }> {
+  return request<{ id: string; paymentStatus: "pending" | "paid" }>("/orders", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(order),
   });
+}
+
+export async function getOrder(id: string): Promise<{
+  id: string;
+  status: string;
+  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  estimatedDelivery: string;
+}> {
+  return request<{
+    id: string;
+    status: string;
+    paymentStatus: "pending" | "paid" | "failed" | "refunded";
+    estimatedDelivery: string;
+  }>(`/orders/${encodeURIComponent(id)}`);
 }
 

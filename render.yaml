@@ -4,7 +4,26 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /
+    plan: free
     envVars:
       - key: BACKEND_API_URL
+        fromService:
+          type: web
+          name: bellefood-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: bellefood-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
         sync: false

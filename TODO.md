@@ -1,4 +1,4 @@
-# BelleFood: Connect Frontend to Spring Boot Backend
+# BelleFood: Node.js and Firebase Backend
 
 ## Plan Steps
 
@@ -15,13 +15,15 @@
 - [x] 11. Backend: implement Order/Customer endpoints (POST /api/orders)
 - [x] 12. Test end-to-end (backend + frontend)
 
-## Backend Completion Steps (current task)
+## Node Backend
 
-- [ ] 1. Implement `common` classes: `ApiException`, `ApiExceptionHandler`, `Constants`
-- [ ] 2. Implement empty DTOs: `CartRequest/CartResponse`, `ProductRequest/ProductResponse`, `MenuRequest/MenuResponse`
-- [ ] 3. Add `getOrderById` to `OrderService` + `GET /api/orders/{id}` endpoint
-- [ ] 4. Implement `customer` module: model, DTOs, Firebase `CustomerService`, `CustomerController`
-- [ ] 5. Implement `payment` module: model, DTOs, Firebase `PaymentService`, `PaymentController`
-- [ ] 6. Implement `delivery` module: model, DTOs, Firebase `DeliveryService`, `DeliveryController`
-- [ ] 7. Compile/verify backend builds successfully
+- [x] Replace the planned Spring Boot service with a Node.js API
+- [x] Add Firebase Admin and Firestore-backed products, carts, customers, orders, payment records, and deliveries
+- [x] Implement product, menu, cart, order-create, and order-lookup API routes used by the frontend
+- [x] Calculate order prices on the server from Firestore product records
+- [x] Add demo product seeding and Firebase setup notes
+- [x] Connect the frontend proxy and cart synchronization to the Node API
+- [x] Add frontend and API services to the Render Blueprint
+- [ ] Configure Firebase credentials and replace the demo menu with the restaurant's real menu
+- [ ] Connect a payment provider before accepting or confirming payments
 

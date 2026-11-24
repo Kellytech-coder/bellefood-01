@@ -11,8 +11,10 @@ import {
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useOrderStore } from "@/lib/orderStore";
+import { getOrder } from "@/lib/api";
 
 const fallbackItems = [
   {
@@ -35,6 +37,18 @@ const fallbackItems = [
 export default function OrderSuccess() {
   const router = useRouter();
   const order = useOrderStore((s) => s.order);
+  const [liveOrder, setLiveOrder] = useState<{ status: string; paymentStatus: string; estimatedDelivery: string } | null>(null);
+
+  useEffect(() => {
+    if (!order?.id) return;
+    let active = true;
+    const refresh = async () => {
+      try { const current = await getOrder(order.id); if (active) setLiveOrder(current); } catch { /* Keep the placed order details visible while offline. */ }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 30_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [order?.id]);
 
   const items =
     order && order.items.length > 0
@@ -47,7 +61,7 @@ export default function OrderSuccess() {
 
   const orderId = order?.id || "BFT9YHCC80";
   const total = order ? order.total : 13500;
-  const deliveryTime = order?.estimatedDelivery || "25-30 mins";
+  const deliveryTime = liveOrder?.estimatedDelivery || order?.estimatedDelivery || "25-30 mins";
   const deliveryAddress = order?.deliveryAddress || "24 Admiralty Way, Lekki Phase 1, Lagos";
   const customerPhone = order?.customerPhone || "+234 800 123 4567";
   const customerEmail = order?.customerEmail || "customer@example.com";
@@ -90,12 +104,15 @@ export default function OrderSuccess() {
           animate={{ opacity:1 }}
           transition={{delay:.3}}
         >
-          Order Confirmed!
+          {(liveOrder?.paymentStatus || order?.paymentStatus) === "paid" ? "Order Confirmed!" : "Order Received!"}
         </motion.h1>
 
         <p className="text-center text-gray-400 mt-4">
-          Your delicious meal is now being prepared with love.
+          {(liveOrder?.paymentStatus || order?.paymentStatus) === "paid"
+            ? "Your delicious meal is now being prepared with love."
+            : "We received your order. Payment is pending and will need to be confirmed."}
         </p>
+        {liveOrder?.status && <p className="mt-2 text-center text-sm capitalize text-orange-400">Order status: {liveOrder.status.replaceAll("-", " ")}</p>}
 
         {/* Order ID */}
 

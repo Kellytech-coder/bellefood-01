@@ -8,8 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   getCart,
-  addToCart as apiAddToCart,
-  removeFromCart as apiRemoveFromCart,
+  replaceCart,
   CartItemApi,
 } from "@/lib/api";
 
@@ -40,7 +39,7 @@ export default function CartItems() {
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
   const [syncing, setSyncing] = useState(false);
-  const [synced, setSynced] = useState(false);
+  const [cartLoaded, setCartLoaded] = useState(false);
 
   // ✅ LOAD CART FROM BACKEND ON MOUNT (if local cart is empty)
   useEffect(() => {
@@ -70,7 +69,10 @@ export default function CartItems() {
       } catch {
         // Backend down — keep local cart
       } finally {
-        if (mounted) setSyncing(false);
+        if (mounted) {
+          setSyncing(false);
+          setCartLoaded(true);
+        }
       }
     }
 
@@ -81,27 +83,14 @@ export default function CartItems() {
     };
   }, []);
 
-  // ✅ PERSIST TO BACKEND WHEN CART CHANGES (debounced)
+  // Persist the full cart so quantity changes and removals stay in sync.
   useEffect(() => {
-    if (synced || syncing) return;
+    if (!cartLoaded) return;
 
     const timer = setTimeout(async () => {
-      if (cart.length === 0) return;
-
       try {
         setSyncing(true);
-
-        for (const item of cart) {
-          await apiAddToCart({
-            productId: item.id,
-            productName: item.name,
-            quantity: item.qty,
-            price: item.price,
-            imageUrl: item.image || "",
-          });
-        }
-
-        setSynced(true);
+        await replaceCart(cart.map((item) => ({ productId: item.id, quantity: item.qty })));
       } catch {
         // Backend down — local state is still the source of truth
       } finally {
@@ -110,7 +99,7 @@ export default function CartItems() {
     }, 1200);
 
     return () => clearTimeout(timer);
-  }, [cart, synced, syncing]);
+  }, [cart, cartLoaded]);
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * item.qty,
@@ -125,14 +114,8 @@ export default function CartItems() {
     router.push("/checkout");
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = (id: string) => {
     removeFromCart(id);
-    // Try to delete from backend (fire and forget)
-    try {
-      await apiRemoveFromCart(id);
-    } catch {
-      // ignore
-    }
   };
 
   return (
