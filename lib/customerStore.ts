@@ -4,11 +4,11 @@ type CustomerState = {
   fullName: string;
   phone: string;
   email: string;
-  paymentMethod: "card" | "bank";
+  paymentMethod: "card" | "bank" | "cash-on-delivery";
   setFullName: (v: string) => void;
   setPhone: (v: string) => void;
   setEmail: (v: string) => void;
-  setPaymentMethod: (v: "card" | "bank") => void;
+  setPaymentMethod: (v: "card" | "bank" | "cash-on-delivery") => void;
   reset: () => void;
 };
 

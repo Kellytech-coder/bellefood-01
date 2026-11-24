@@ -7,10 +7,11 @@ import DeliveryAddress from "@/components/checkout/DeliveryAddress";
 import PaymentMethod from "@/components/checkout/PaymentMethod";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import ExpressCheckout from "@/components/checkout/ExpressCheckout";
+import CheckoutGuard from "@/components/auth/CheckoutGuard";
 
 export default function CheckoutInfo() {
   return (
-    <section className="bg-[#020D0B] min-h-screen py-12 px-4 md:px-10">
+    <CheckoutGuard><section className="bg-[#020D0B] min-h-screen py-12 px-4 md:px-10">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
 
         {/* LEFT SIDE */}
@@ -35,6 +36,6 @@ export default function CheckoutInfo() {
         {/* RIGHT SIDE */}
          <OrderSummary />
       </div>
-    </section>
+    </section></CheckoutGuard>
   );
 }

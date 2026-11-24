@@ -35,6 +35,8 @@ export type Product = {
   category: string;
   rating: number;
   available: boolean;
+  salePrice?: number | null;
+  label?: string;
 };
 
 export type MenuItem = {
@@ -66,11 +68,20 @@ export type OrderInput = {
   customerEmail: string;
   deliveryAddress: string;
   deliveryLandmark?: string;
-  paymentMethod: "card" | "bank";
+  paymentMethod: "card" | "bank" | "cash-on-delivery";
   items: OrderItemInput[];
   subtotal: number;
   deliveryFee: number;
   total: number;
+};
+
+export type TrackedOrder = {
+  id: string;
+  status: string;
+  paymentStatus: "pending" | "paid" | "failed" | "refunded";
+  estimatedDelivery: string;
+  createdAt?: string | null;
+  items: Array<{ name: string; quantity: number }>;
 };
 
 export async function getProducts(): Promise<Product[]> {
@@ -145,5 +156,13 @@ export async function getOrder(id: string): Promise<{
     paymentStatus: "pending" | "paid" | "failed" | "refunded";
     estimatedDelivery: string;
   }>(`/orders/${encodeURIComponent(id)}`);
+}
+
+export async function trackOrder(orderId: string, phone: string): Promise<TrackedOrder> {
+  return request<TrackedOrder>("/orders/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId, phone }),
+  });
 }
 

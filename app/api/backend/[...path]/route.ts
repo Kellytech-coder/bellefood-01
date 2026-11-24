@@ -35,9 +35,15 @@ async function proxyRequest(request: Request, context: RouteContext) {
     });
 
     const responseHeaders = new Headers();
-    for (const header of ["content-type", "cache-control", "set-cookie", "location"]) {
+    for (const header of ["content-type", "cache-control", "location"]) {
       const value = upstream.headers.get(header);
       if (value) responseHeaders.set(header, value);
+    }
+    const cookies = upstream.headers.getSetCookie?.() ?? [];
+    for (const cookie of cookies) responseHeaders.append("Set-Cookie", cookie);
+    if (cookies.length === 0) {
+      const cookie = upstream.headers.get("set-cookie");
+      if (cookie) responseHeaders.set("Set-Cookie", cookie);
     }
 
     return new Response(upstream.body, {

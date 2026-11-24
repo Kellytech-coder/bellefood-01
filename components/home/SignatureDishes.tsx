@@ -8,6 +8,7 @@ import { useRef, useState, useEffect } from "react";
 
 import { getProducts, Product } from "@/lib/api";
 import { useCartStore } from "@/lib/cartStore";
+import { requireCustomerSession } from "@/lib/customerAuth";
 
 const fallbackImages = [
   "/images/sign1.png",
@@ -68,12 +69,13 @@ export default function SignatureDishes() {
     });
   };
 
-  const handleAddToCart = (dish: Product) => {
+  const handleAddToCart = async (dish: Product) => {
+    if (!(await requireCustomerSession())) return;
     addToCart({
       id: dish.id,
       name: dish.name,
       desc: dish.description,
-      price: Number(dish.price),
+      price: Number(dish.salePrice && dish.salePrice < dish.price ? dish.salePrice : dish.price),
       qty: 1,
       image: dish.imageUrl,
     });
@@ -163,7 +165,8 @@ export default function SignatureDishes() {
                     {/* PUSH DOWN */}
                     <div className="mt-auto">
                       <p className="text-green-500 font-bold text-sm sm:text-lg mb-3">
-                        ₦{Number(dish.price).toLocaleString()}
+                        {dish.label && <span className="mr-2 rounded-full bg-orange-100 px-2 py-1 text-[10px] text-orange-700">{dish.label}</span>}{dish.salePrice && dish.salePrice < dish.price && <span className="mr-2 text-xs font-normal text-gray-500 line-through">₦{Number(dish.price).toLocaleString()}</span>}
+                        ₦{Number(dish.salePrice && dish.salePrice < dish.price ? dish.salePrice : dish.price).toLocaleString()}
                       </p>
 
                       <button

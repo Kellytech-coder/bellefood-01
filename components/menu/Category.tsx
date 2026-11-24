@@ -22,10 +22,12 @@ import {
 
 import { useCartStore } from "@/lib/cartStore";
 import { getProducts, Product } from "@/lib/api";
+import { requireCustomerSession } from "@/lib/customerAuth";
 
 type FoodItem = Product & {
   slug: string;
   badge?: string;
+  originalPrice?: number;
 };
 
 const categories = [
@@ -145,7 +147,8 @@ export default function MenuCategory() {
                 : p.category === "Rice"
                 ? "Best Seller"
                 : undefined,
-            price: Number(p.price),
+            price: p.salePrice && p.salePrice < p.price ? Number(p.salePrice) : Number(p.price),
+            originalPrice: Number(p.price),
           }));
 
         setProducts(foods);
@@ -183,16 +186,19 @@ export default function MenuCategory() {
   );
 
   // ✅ ADD TO CART (ZUSTAND + ANIMATION)
-  const addToCartHandler = (
+  const addToCartHandler = async (
     food: FoodItem,
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    const button = e.currentTarget;
+
+    if (!(await requireCustomerSession())) return;
 
     if (!cartRef.current) return;
 
-    const img = e.currentTarget
+    const img = button
       .closest(".food-card")
       ?.querySelector("img");
 
@@ -381,9 +387,9 @@ export default function MenuCategory() {
                       alt={food.name}
                     />
 
-                    {food.badge && (
+                    {(food.label || food.badge) && (
                       <span className="absolute right-3 top-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
-                        {food.badge}
+                        {food.label || food.badge}
                       </span>
                     )}
                   </div>
@@ -399,6 +405,7 @@ export default function MenuCategory() {
 
                     <div className="flex justify-between items-center">
                       <span className="text-green-500 font-bold text-lg">
+                        {food.salePrice && food.salePrice < (food.originalPrice ?? food.price) && <span className="mr-2 text-sm font-normal text-gray-500 line-through">₦{(food.originalPrice ?? food.price).toLocaleString()}</span>}
                         ₦{food.price.toLocaleString()}
                       </span>
 

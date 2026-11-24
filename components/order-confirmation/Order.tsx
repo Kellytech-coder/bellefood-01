@@ -303,7 +303,7 @@ export default function OrderSuccess() {
             whileTap={{
               scale:.95
             }}
-            onClick={() => router.push("/")}
+            onClick={() => router.push(`/track?order=${encodeURIComponent(orderId)}`)}
             className="h-14 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-semibold flex justify-center items-center gap-2 shadow-xl"
           >
             Track Order

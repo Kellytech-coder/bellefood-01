@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { CreditCard, Landmark, CheckCircle, ShieldCheck } from "lucide-react";
+import { Banknote, CreditCard, Landmark, CheckCircle, ShieldCheck } from "lucide-react";
 import { useCustomerStore } from "@/lib/customerStore";
+import { useEffect, useState } from "react";
 
 // ✅ Animation system
 const container: Variants = {
@@ -29,6 +30,29 @@ const item: Variants = {
 export default function PaymentMethod() {
   const selected = useCustomerStore((s) => s.paymentMethod);
   const setSelected = useCustomerStore((s) => s.setPaymentMethod);
+  const [cashOnDeliveryAllowed, setCashOnDeliveryAllowed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const refreshPermission = () => {
+      fetch("/api/backend/auth/session", { credentials: "same-origin", cache: "no-store" })
+        .then((response) => response.ok ? response.json() : null)
+        .then((session) => { if (mounted) setCashOnDeliveryAllowed(session?.cashOnDeliveryAllowed !== false && session !== null); })
+        .catch(() => { if (mounted) setCashOnDeliveryAllowed(false); });
+    };
+    refreshPermission();
+    window.addEventListener("focus", refreshPermission);
+    const timer = window.setInterval(refreshPermission, 30_000);
+    return () => {
+      mounted = false;
+      window.removeEventListener("focus", refreshPermission);
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!cashOnDeliveryAllowed && selected === "cash-on-delivery") setSelected("card");
+  }, [cashOnDeliveryAllowed, selected, setSelected]);
 
   return (
     <motion.div
@@ -109,6 +133,21 @@ export default function PaymentMethod() {
             <div className="w-5 h-5 rounded-full border border-gray-600" />
           )}
         </motion.button>
+
+        {cashOnDeliveryAllowed && <motion.button
+          variants={item}
+          onClick={() => setSelected("cash-on-delivery")}
+          whileTap={{ scale: 0.98 }}
+          className={`w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 ${
+            selected === "cash-on-delivery" ? "border-orange-500 bg-orange-500/10" : "border-gray-700 hover:border-gray-500"
+          }`}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 flex items-center justify-center rounded-lg border border-gray-700"><Banknote className="text-white opacity-80" size={20}/></div>
+            <div className="text-left"><p className="text-white font-medium">Cash on Delivery</p><p className="text-gray-400 text-sm">Pay the courier when your order arrives</p></div>
+          </div>
+          {selected === "cash-on-delivery" ? <CheckCircle className="text-orange-500" size={20}/> : <div className="w-5 h-5 rounded-full border border-gray-600"/>}
+        </motion.button>}
       </div>
 
       {/* 🔒 Security Info */}

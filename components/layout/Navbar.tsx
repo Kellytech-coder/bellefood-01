@@ -10,19 +10,34 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "@/lib/cartStore";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const navItems = ["Home", "Menu", "Track Orders", "Support", "About Us"];
+type CustomerSession = { name: string; email: string };
 
 export default function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState<string | null>("Home");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [customer, setCustomer] = useState<CustomerSession | null>(null);
+  const [customerChecked, setCustomerChecked] = useState(false);
 
   // ✅ CART STORE
   const cart = useCartStore((state) => state.cart);
   const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  const refreshCustomer = useCallback(async () => {
+    try {
+      const response = await fetch("/api/backend/auth/session", { credentials: "same-origin", cache: "no-store" });
+      setCustomer(response.ok ? await response.json() as CustomerSession : null);
+    } catch {
+      setCustomer(null);
+    } finally {
+      setCustomerChecked(true);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,12 +48,32 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    void refreshCustomer();
+    window.addEventListener("bellefood-auth-changed", refreshCustomer);
+    return () => window.removeEventListener("bellefood-auth-changed", refreshCustomer);
+  }, [refreshCustomer]);
+
+  async function signOut() {
+    try {
+      const response = await fetch("/api/backend/auth/signout", { method: "POST", credentials: "same-origin", cache: "no-store" });
+      if (!response.ok) return;
+      clearCart();
+      setCustomer(null);
+      setCustomerChecked(true);
+      setMobileOpen(false);
+      window.dispatchEvent(new Event("bellefood-auth-changed"));
+    } catch {
+      // Keep the signed-in state when the server could not end the session.
+    }
+  }
+
   if (pathname.startsWith("/admin")) return null;
 
   const getHref = (item: string) => {
     if (item === "Home") return "/";
     if (item === "Menu") return "/menu";
-    if (item === "Track Orders") return "/#track";
+    if (item === "Track Orders") return "/track";
     if (item === "Support") return "/complaints";
     if (item === "About Us") return "/#about";
    
@@ -107,6 +142,7 @@ export default function Navbar() {
 
           {/* RIGHT SECTION */}
           <div className="flex items-center gap-2">
+            {customerChecked && (customer ? <><span className="hidden max-w-28 truncate text-sm font-semibold text-gray-800 md:block">Hi, {customer.name.split(" ")[0]}</span><button onClick={() => void signOut()} className="hidden rounded-full border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:border-orange-300 hover:text-orange-600 md:block">Sign out</button></> : <><Link href="/signin" className="hidden md:block rounded-full px-3 py-1.5 text-sm font-semibold text-gray-950 hover:text-orange-600">Sign in</Link><Link href="/signup" className="hidden md:block rounded-full bg-[#18231f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600">Join us</Link></>)}
             <Link
               href="/contact"
               className="hidden md:block border px-3 py-1.5 rounded-full text-sm text-gray-950"
@@ -182,6 +218,7 @@ export default function Navbar() {
                 >
                   Contact
                 </Link>
+                {customerChecked && (customer ? <><span className="text-sm font-semibold text-gray-500">Signed in as {customer.name}</span><button onClick={() => void signOut()} className="w-fit rounded-full border border-gray-200 px-5 py-2.5 text-base font-semibold text-gray-800">Sign out</button></> : <><Link href="/signin" onClick={() => setMobileOpen(false)} className="text-lg font-medium">Sign in</Link><Link href="/signup" onClick={() => setMobileOpen(false)} className="w-fit rounded-full bg-orange-500 px-5 py-2.5 text-base font-semibold text-white">Join us</Link></>)}
               </div>
             </motion.div>
           </motion.div>

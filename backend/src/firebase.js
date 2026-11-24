@@ -25,7 +25,7 @@ function getCredential() {
   );
 }
 
-const app = getApps()[0] ?? initializeApp({
+export const app = getApps()[0] ?? initializeApp({
   credential: getCredential(),
   ...(process.env.FIREBASE_STORAGE_BUCKET
     ? { storageBucket: process.env.FIREBASE_STORAGE_BUCKET }

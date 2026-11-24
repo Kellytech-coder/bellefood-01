@@ -8,6 +8,7 @@ import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 
 import { useCartStore } from "@/lib/cartStore";
 import { getProduct, Product } from "@/lib/api";
+import { requireCustomerSession } from "@/lib/customerAuth";
 
 const MotionDiv = motion.create("div");
 
@@ -83,8 +84,9 @@ export default function ProductDetail() {
 
   const total = product ? (Number(product.price) + extrasTotal) * qty : 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedProtein || !product) return;
+    if (!(await requireCustomerSession())) return;
 
     setAdding(true);
 
