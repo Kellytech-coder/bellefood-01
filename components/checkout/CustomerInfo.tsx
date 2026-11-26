@@ -60,6 +60,7 @@ export default function CustomerInfo() {
 
           <input
             type="text"
+            autoComplete="off"
             placeholder="Enter your name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -78,6 +79,7 @@ export default function CustomerInfo() {
 
             <input
               type="tel"
+              autoComplete="off"
               placeholder="+234 000 000 000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -94,6 +96,7 @@ export default function CustomerInfo() {
 
             <input
               type="email"
+              autoComplete="off"
               placeholder="Your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

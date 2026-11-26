@@ -85,10 +85,6 @@ function FoodImage({
 }) {
   const [imageSrc, setImageSrc] = useState(src ?? fallbackSrc);
 
-  useEffect(() => {
-    setImageSrc(src ?? fallbackSrc);
-  }, [src, fallbackSrc]);
-
   return (
     <Image
       src={imageSrc}
@@ -382,6 +378,7 @@ export default function MenuCategory() {
                 >
                   <div className="relative h-48 md:h-52">
                     <FoodImage
+                      key={`${imageSrc ?? ""}:${fallbackImage}`}
                       src={imageSrc}
                       fallbackSrc={fallbackImage}
                       alt={food.name}

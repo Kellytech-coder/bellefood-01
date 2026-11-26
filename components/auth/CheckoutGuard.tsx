@@ -3,6 +3,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Utensils } from "lucide-react";
+import { useCustomerStore } from "@/lib/customerStore";
+import { resetCheckoutProgress } from "@/lib/checkoutProgressStore";
 
 export default function CheckoutGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -15,7 +17,12 @@ export default function CheckoutGuard({ children }: { children: ReactNode }) {
         if (!response.ok) throw new Error("Sign in required");
         return response.json();
       })
-      .then(() => { if (active) setAllowed(true); })
+      .then(() => {
+        if (!active) return;
+        useCustomerStore.getState().reset();
+        resetCheckoutProgress();
+        setAllowed(true);
+      })
       .catch(() => { if (active) router.replace("/signin"); });
     return () => { active = false; };
   }, [router]);

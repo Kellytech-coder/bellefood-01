@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { useCartStore } from "@/lib/cartStore";
 import { useCustomerStore } from "@/lib/customerStore";
-import { useCheckoutProgress } from "@/lib/checkoutProgressStore";
+import { resetCheckoutProgress, useCheckoutProgress } from "@/lib/checkoutProgressStore";
 import { useOrderStore } from "@/lib/orderStore";
 import { createOrder } from "@/lib/api";
 
@@ -90,10 +90,12 @@ export default function OrderSummary() {
         throw new Error("The server did not return an order number. Please contact support before retrying.");
       }
       const orderId = res.id;
+      const trackingId = res.trackingId || orderId;
 
       // Store the placed order for the confirmation page
       setOrder({
         id: orderId,
+        trackingId,
         customerName: orderPayload.customerName,
         customerPhone: orderPayload.customerPhone,
         customerEmail: orderPayload.customerEmail,
@@ -114,6 +116,8 @@ export default function OrderSummary() {
 
       // Clear cart
       clearCart();
+      customer.reset();
+      resetCheckoutProgress();
 
       router.push("/order-confirmation");
     } catch (reason) {

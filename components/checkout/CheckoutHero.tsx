@@ -16,12 +16,10 @@ export default function CheckoutHeader() {
   const progressState = useCheckoutProgress();
   const progress = computeCheckoutProgressPercent(progressState);
 
-  const completedCount = progressState.selectedDeliveryOption ? 1 : 0;
   const deliveryAddressDone = progressState.deliveryAddress.trim().length > 0;
   const landmarkDone = progressState.landmark.trim().length > 0;
-  const checkoutFieldsTotal = 3; // quick select + address + landmark
-  const checkoutFieldsDone =
-    completedCount + (deliveryAddressDone ? 1 : 0) + (landmarkDone ? 1 : 0);
+  const checkoutFieldsTotal = 2;
+  const checkoutFieldsDone = (deliveryAddressDone ? 1 : 0) + (landmarkDone ? 1 : 0);
 
 
   return (

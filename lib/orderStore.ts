@@ -9,6 +9,7 @@ export type PlacedOrderItem = {
 
 export type PlacedOrder = {
   id: string;
+  trackingId: string;
   customerName: string;
   customerPhone: string;
   customerEmail: string;

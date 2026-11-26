@@ -16,6 +16,14 @@ import { useEffect, useState } from "react";
 import { useOrderStore } from "@/lib/orderStore";
 import { getOrder } from "@/lib/api";
 
+const orderStatusMessages: Record<string, { title: string; message: string }> = {
+  received: { title: "Order received", message: "We’ve received your order and are confirming the details." },
+  preparing: { title: "Preparing your order", message: "Our kitchen is preparing your meal now." },
+  "on-the-way": { title: "Your order is on the way", message: "Your order has been handed to the delivery rider." },
+  delivered: { title: "Order delivered", message: "Your order has been delivered. Enjoy your meal!" },
+  cancelled: { title: "Order cancelled", message: "This order was cancelled. Please contact our support team if you need help." },
+};
+
 const fallbackItems = [
   {
     name: "Party Jollof Rice",
@@ -37,7 +45,7 @@ const fallbackItems = [
 export default function OrderSuccess() {
   const router = useRouter();
   const order = useOrderStore((s) => s.order);
-  const [liveOrder, setLiveOrder] = useState<{ status: string; paymentStatus: string; estimatedDelivery: string } | null>(null);
+  const [liveOrder, setLiveOrder] = useState<{ status: string; paymentStatus: string; estimatedDelivery: string; trackingId: string } | null>(null);
 
   useEffect(() => {
     if (!order?.id) return;
@@ -59,7 +67,13 @@ export default function OrderSuccess() {
         }))
       : fallbackItems;
 
-  const orderId = order?.id || "BFT9YHCC80";
+  const orderId = order?.id || "";
+  const trackingId = liveOrder?.trackingId || order?.trackingId || orderId;
+  const currentStatus = liveOrder?.status || "received";
+  const statusMessage = orderStatusMessages[currentStatus] || {
+    title: currentStatus.replaceAll("-", " "),
+    message: "Check your order tracking page for the latest update.",
+  };
   const total = order ? order.total : 13500;
   const deliveryTime = liveOrder?.estimatedDelivery || order?.estimatedDelivery || "25-30 mins";
   const deliveryAddress = order?.deliveryAddress || "24 Admiralty Way, Lekki Phase 1, Lagos";
@@ -104,15 +118,14 @@ export default function OrderSuccess() {
           animate={{ opacity:1 }}
           transition={{delay:.3}}
         >
-          {(liveOrder?.paymentStatus || order?.paymentStatus) === "paid" ? "Order Confirmed!" : "Order Received!"}
+          {statusMessage.title}
         </motion.h1>
 
         <p className="text-center text-gray-400 mt-4">
-          {(liveOrder?.paymentStatus || order?.paymentStatus) === "paid"
-            ? "Your delicious meal is now being prepared with love."
-            : "We received your order. Payment is pending and will need to be confirmed."}
+          {statusMessage.message}
         </p>
-        {liveOrder?.status && <p className="mt-2 text-center text-sm capitalize text-orange-400">Order status: {liveOrder.status.replaceAll("-", " ")}</p>}
+        {(liveOrder?.paymentStatus || order?.paymentStatus) !== "paid" && <p className="mt-2 text-center text-sm text-gray-500">Payment is pending and will need to be confirmed.</p>}
+        <p className="mt-2 text-center text-xs text-gray-500">This page checks for status updates every 30 seconds.</p>
 
         {/* Order ID */}
 
@@ -122,11 +135,11 @@ export default function OrderSuccess() {
         >
 
           <p className="text-center text-gray-400">
-            Order ID
+            Tracking ID
           </p>
 
           <h2 className="text-center text-4xl font-bold text-orange-500 mt-3 tracking-wider">
-            {orderId}
+            {trackingId ? `#${trackingId}` : "Unavailable"}
           </h2>
 
         </motion.div>
@@ -303,7 +316,8 @@ export default function OrderSuccess() {
             whileTap={{
               scale:.95
             }}
-            onClick={() => router.push(`/track?order=${encodeURIComponent(orderId)}`)}
+            onClick={() => router.push(`/track?trackingId=${encodeURIComponent(trackingId)}`)}
+            disabled={!trackingId}
             className="h-14 rounded-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-semibold flex justify-center items-center gap-2 shadow-xl"
           >
             Track Order

@@ -6,7 +6,6 @@ import CustomerInfo from "@/components/checkout/CustomerInfo";
 import DeliveryAddress from "@/components/checkout/DeliveryAddress";
 import PaymentMethod from "@/components/checkout/PaymentMethod";
 import OrderSummary from "@/components/checkout/OrderSummary";
-import ExpressCheckout from "@/components/checkout/ExpressCheckout";
 import CheckoutGuard from "@/components/auth/CheckoutGuard";
 
 export default function CheckoutInfo() {
@@ -27,7 +26,6 @@ export default function CheckoutInfo() {
           className="lg:col-span-2 space-y-6"
         >
           <CheckoutHero />
-          <ExpressCheckout />
           <CustomerInfo />
           <DeliveryAddress /> 
           <PaymentMethod />

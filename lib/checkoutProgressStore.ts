@@ -3,13 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 
 type ProgressState = {
-  selectedDeliveryOption: "home" | "office" | null;
   deliveryAddress: string;
   landmark: string;
 };
 
 const DEFAULT_STATE: ProgressState = {
-  selectedDeliveryOption: null,
   deliveryAddress: "",
   landmark: "",
 };
@@ -53,22 +51,17 @@ export function __resetCheckoutProgressForTests() {
 export function computeCheckoutProgressPercent(s: ProgressState) {
   // Steps shown in header: Home -> Menu -> Cart -> Checkout
   // We map "interactive" progress within Checkout to fields we have right now.
-  // Base: selecting delivery option counts as starting Checkout.
-
   // Checkout section items:
-  // 1) Quick select (home/office)
-  // 2) Delivery address textarea
-  // 3) Landmark (optional)
-  const itemsTotal = 3;
+  // 1) Delivery address textarea
+  // 2) Landmark (optional)
+  const itemsTotal = 2;
 
   let itemsDone = 0;
-  if (s.selectedDeliveryOption) itemsDone += 1;
   if (s.deliveryAddress.trim().length > 0) itemsDone += 1;
   if (s.landmark.trim().length > 0) itemsDone += 1;
 
   // If nothing is provided, progress should be 0.
-  if (!s.selectedDeliveryOption &&
-      s.deliveryAddress.trim().length === 0 &&
+  if (s.deliveryAddress.trim().length === 0 &&
       s.landmark.trim().length === 0) {
     return 0;
   }
@@ -84,8 +77,6 @@ export function computeCheckoutProgressPercent(s: ProgressState) {
 export function useCheckoutProgressActions() {
   return useMemo(
     () => ({
-      setSelectedDeliveryOption: (v: ProgressState["selectedDeliveryOption"]) =>
-        setCheckoutProgress({ selectedDeliveryOption: v }),
       setDeliveryAddress: (v: string) => setCheckoutProgress({ deliveryAddress: v }),
       setLandmark: (v: string) => setCheckoutProgress({ landmark: v }),
       reset: () => resetCheckoutProgress(),

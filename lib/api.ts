@@ -77,6 +77,7 @@ export type OrderInput = {
 
 export type TrackedOrder = {
   id: string;
+  trackingId: string;
   status: string;
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   estimatedDelivery: string;
@@ -134,8 +135,8 @@ export async function removeFromCart(id: string): Promise<string> {
 
 export async function createOrder(
   order: OrderInput,
-): Promise<{ id: string; paymentStatus: "pending" | "paid" }> {
-  return request<{ id: string; paymentStatus: "pending" | "paid" }>("/orders", {
+): Promise<{ id: string; trackingId: string | null; paymentStatus: "pending" | "paid" }> {
+  return request<{ id: string; trackingId: string | null; paymentStatus: "pending" | "paid" }>("/orders", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -146,23 +147,25 @@ export async function createOrder(
 
 export async function getOrder(id: string): Promise<{
   id: string;
+  trackingId: string;
   status: string;
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   estimatedDelivery: string;
 }> {
   return request<{
     id: string;
+    trackingId: string;
     status: string;
     paymentStatus: "pending" | "paid" | "failed" | "refunded";
     estimatedDelivery: string;
   }>(`/orders/${encodeURIComponent(id)}`);
 }
 
-export async function trackOrder(orderId: string, phone: string): Promise<TrackedOrder> {
+export async function trackOrder(trackingId: string, phone: string): Promise<TrackedOrder> {
   return request<TrackedOrder>("/orders/track", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderId, phone }),
+    body: JSON.stringify({ trackingId, phone }),
   });
 }
 

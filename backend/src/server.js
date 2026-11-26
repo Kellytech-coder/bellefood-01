@@ -18,6 +18,16 @@ const ADMIN_SESSION_COOKIE = "bellefood_admin_session";
 const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 12;
 const CUSTOMER_SESSION_COOKIE = "bellefood_customer_session";
 const CUSTOMER_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const TRACKING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function generateTrackingCode() {
+  const random = randomBytes(7);
+  let code = "T";
+  for (let index = 0; index < 7; index += 1) {
+    code += TRACKING_CODE_ALPHABET[random[index] % TRACKING_CODE_ALPHABET.length];
+  }
+  return code;
+}
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -362,11 +372,42 @@ async function handleApi(request, response, pathname) {
       if (body.status !== undefined) updates.status = body.status;
       if (body.paymentStatus !== undefined) updates.paymentStatus = body.paymentStatus;
       if (body.estimatedDelivery !== undefined) updates.estimatedDelivery = body.estimatedDelivery.trim();
-      await ref.update(updates);
+      let updatedOrder;
+      if (body.status === "preparing" && (!snapshot.data().trackingId || snapshot.data().trackingId === ref.id)) {
+        let assigned = false;
+        for (let attempt = 0; attempt < 10 && !assigned; attempt += 1) {
+          const trackingId = generateTrackingCode();
+          const trackingRef = db.collection("trackingIds").doc(trackingId);
+          const result = await db.runTransaction(async (transaction) => {
+            const currentSnapshot = await transaction.get(ref);
+            if (!currentSnapshot.exists) throw new HttpError(404, "Order not found.");
+            const currentOrder = currentSnapshot.data();
+            if (currentOrder.trackingId && currentOrder.trackingId !== ref.id) {
+              const currentUpdates = { ...updates, trackingId: currentOrder.trackingId };
+              transaction.update(ref, currentUpdates);
+              return { collision: false, order: { ...currentOrder, ...currentUpdates } };
+            }
+            const trackingSnapshot = await transaction.get(trackingRef);
+            if (trackingSnapshot.exists) return { collision: true };
+            const currentUpdates = { ...updates, trackingId };
+            transaction.create(trackingRef, { orderId: ref.id, createdAt: updates.updatedAt });
+            transaction.update(ref, currentUpdates);
+            return { collision: false, order: { ...currentOrder, ...currentUpdates } };
+          });
+          if (!result.collision) {
+            updatedOrder = result.order;
+            assigned = true;
+          }
+        }
+        if (!assigned) throw new HttpError(500, "Could not assign a tracking ID. Please try again.");
+      } else {
+        await ref.update(updates);
+        updatedOrder = { ...snapshot.data(), ...updates };
+      }
       if (body.paymentStatus !== undefined) {
         await db.collection("payments").doc(ref.id).set({ status: body.paymentStatus, updatedAt: updates.updatedAt }, { merge: true });
       }
-      return send(response, 200, { id: ref.id, ...snapshot.data(), ...updates });
+      return send(response, 200, { id: ref.id, ...updatedOrder });
     }
 
     if (segments[1] === "products" && method === "POST" && segments.length === 2) {
@@ -474,11 +515,23 @@ async function handleApi(request, response, pathname) {
     if (!customerName || customerName.length > 120 || !message || message.length < 10 || message.length > 3000) {
       throw new HttpError(400, "Enter your name and a complaint between 10 and 3,000 characters.");
     }
+    let complaintOrderId = String(body.orderId ?? "").trim().replace(/^#/, "").slice(0, 120);
+    if (complaintOrderId) {
+      let orderSnapshot = await db.collection("orders").doc(complaintOrderId).get();
+      if (!orderSnapshot.exists) {
+        const trackingSnapshot = await db.collection("trackingIds").doc(complaintOrderId).get();
+        if (trackingSnapshot.exists) orderSnapshot = await db.collection("orders").doc(trackingSnapshot.data().orderId).get();
+      }
+      if (orderSnapshot.exists) {
+        const order = orderSnapshot.data();
+        complaintOrderId = String(order.trackingId || orderSnapshot.id);
+      }
+    }
     const ref = db.collection("complaints").doc();
     const complaint = {
       customerName,
       customerEmail: customerEmail.slice(0, 254),
-      orderId: String(body.orderId ?? "").trim().slice(0, 120),
+      orderId: complaintOrderId,
       category: String(body.category ?? "General").trim().slice(0, 80) || "General",
       message,
       status: "open",
@@ -602,7 +655,7 @@ async function handleApi(request, response, pathname) {
       }
       const product = await getProduct(productId);
       if (!product.available) throw new HttpError(409, `${product.name} is currently unavailable.`);
-      items.push({ productId, productName: product.name, quantity, price: productPrice(product) });
+      items.push({ productId, productName: product.name, imageUrl: product.imageUrl, quantity, price: productPrice(product) });
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -658,22 +711,27 @@ async function handleApi(request, response, pathname) {
       });
     });
 
-    return send(response, 201, { id: orderRef.id, ...order });
+    return send(response, 201, { id: orderRef.id, trackingId: null, ...order });
   }
 
   if (segments[0] === "orders" && segments[1] === "track" && method === "POST" && segments.length === 2) {
     const body = await readJson(request);
-    const orderId = String(body.orderId ?? "").trim();
+    const trackingId = String(body.trackingId ?? body.orderId ?? "").trim().replace(/^#/, "");
     const normalizePhone = (value) => String(value ?? "").replace(/\D/g, "").replace(/^234/, "").replace(/^0/, "");
     const phone = normalizePhone(body.phone);
-    if (!orderId || orderId.length > 120 || phone.length < 10 || phone.length > 15) throw new HttpError(400, "Enter your order number and the phone number used at checkout.");
-    const snapshot = await db.collection("orders").doc(orderId).get();
+    if (!trackingId || trackingId.length > 120 || phone.length < 10 || phone.length > 15) throw new HttpError(400, "Enter your tracking ID and the phone number used at checkout.");
+    let snapshot = await db.collection("orders").doc(trackingId).get();
+    if (!snapshot.exists) {
+      const trackingSnapshot = await db.collection("trackingIds").doc(trackingId).get();
+      if (trackingSnapshot.exists) snapshot = await db.collection("orders").doc(trackingSnapshot.data().orderId).get();
+    }
     if (!snapshot.exists) throw new HttpError(404, "We couldn’t find an order with those details.");
     const order = snapshot.data();
     const orderPhone = normalizePhone(order.customerPhone);
     if (!orderPhone || phone !== orderPhone) throw new HttpError(404, "We couldn’t find an order with those details.");
     return send(response, 200, {
       id: snapshot.id,
+      trackingId: String(order.trackingId ?? snapshot.id),
       status: String(order.status ?? "received"),
       paymentStatus: String(order.paymentStatus ?? "pending"),
       estimatedDelivery: String(order.estimatedDelivery ?? "").trim(),
@@ -685,7 +743,8 @@ async function handleApi(request, response, pathname) {
   if (segments[0] === "orders" && segments.length === 2 && method === "GET") {
     const snapshot = await db.collection("orders").doc(segments[1]).get();
     if (!snapshot.exists) throw new HttpError(404, "Order not found.");
-    return send(response, 200, { id: snapshot.id, ...snapshot.data() });
+    const order = snapshot.data();
+    return send(response, 200, { ...order, id: snapshot.id, trackingId: order.trackingId || snapshot.id });
   }
 
   return send(response, 404, { message: "Route not found." });

@@ -18,10 +18,10 @@ export default function ExpressCheckout() {
         </div>
         <div>
           <h3 className="text-white font-semibold text-lg">
-            Express Checkout
+            Order Details
           </h3>
           <p className="text-gray-400 text-sm">
-            Auto fill enabled - Secure payments - 30-min delivery
+            Enter your contact and delivery information below.
           </p>
         </div>
       </div>
