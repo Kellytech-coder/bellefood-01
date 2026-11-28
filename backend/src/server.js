@@ -1,5 +1,7 @@
 import { createServer } from "node:http";
 import { randomUUID, createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { getAuth } from "firebase-admin/auth";
+import { FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { app, db } from "./firebase.js";
 
@@ -18,6 +20,7 @@ const ADMIN_SESSION_COOKIE = "bellefood_admin_session";
 const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 12;
 const CUSTOMER_SESSION_COOKIE = "bellefood_customer_session";
 const CUSTOMER_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const customerFirebaseAuth = getAuth(app);
 const TRACKING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function generateTrackingCode() {
@@ -171,14 +174,57 @@ async function getCustomerSession(request) {
   }
 }
 
-function passwordHash(password, salt = randomBytes(16).toString("hex")) {
-  return { salt, hash: scryptSync(password, salt, 64).toString("hex") };
-}
-
 function validPassword(password, salt, expectedHash) {
   const actual = scryptSync(password, salt, 64);
   const expected = Buffer.from(expectedHash, "hex");
   return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+async function firebaseIdentityRequest(action, payload) {
+  const apiKey = process.env.FIREBASE_WEB_API_KEY?.trim();
+  if (!apiKey) throw new HttpError(503, "Firebase Authentication is not configured. Set FIREBASE_WEB_API_KEY on the backend.");
+
+  let response;
+  try {
+    response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:${action}?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new HttpError(503, "Firebase Authentication could not be reached. Please try again later.");
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (response.ok) return { ok: true, data };
+  const message = String(data?.error?.message ?? "UNKNOWN_ERROR");
+  return { ok: false, code: message.split(/[ :]/, 1)[0] };
+}
+
+async function findFirebaseCustomer(email) {
+  try {
+    return await customerFirebaseAuth.getUserByEmail(email);
+  } catch (error) {
+    if (error.code === "auth/user-not-found") return null;
+    throw new HttpError(503, "Firebase Authentication could not look up this account.");
+  }
+}
+
+async function markCustomerAsFirebaseAuth(ref, account) {
+  if (account.authProvider === "firebase" && !account.salt && !account.hash) return;
+  await ref.update({
+    authProvider: "firebase",
+    authMigratedAt: new Date().toISOString(),
+    salt: FieldValue.delete(),
+    hash: FieldValue.delete(),
+  });
+}
+
+function firebaseSignInError(code) {
+  if (code === "USER_DISABLED") return new HttpError(403, "This account has been disabled. Contact BelleFood support for help.");
+  if (code === "TOO_MANY_ATTEMPTS_TRY_LATER") return new HttpError(429, "Too many sign-in attempts. Please wait and try again.");
+  if (["OPERATION_NOT_ALLOWED", "API_KEY_INVALID", "INVALID_API_KEY", "CONFIGURATION_NOT_FOUND"].includes(code)) return new HttpError(503, "Enable Email/Password sign-in in Firebase Authentication and check FIREBASE_WEB_API_KEY.");
+  return new HttpError(401, "Email or password is incorrect.");
 }
 
 function safeEqualText(left, right) {
@@ -243,8 +289,42 @@ async function handleApi(request, response, pathname) {
     return send(response, 200, { status: "signed-out" }, { "Set-Cookie": expiredCookies });
   }
 
+  if (segments[0] === "auth" && segments[1] === "forgot-password" && method === "POST" && segments.length === 2) {
+    if (!process.env.FIREBASE_WEB_API_KEY?.trim()) throw new HttpError(503, "Firebase Authentication is not configured. Set FIREBASE_WEB_API_KEY on the backend.");
+    const body = await readJson(request);
+    const email = String(body.email ?? "").trim().toLowerCase();
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, "Enter a valid email address.");
+    const accountId = createHash("sha256").update(email).digest("hex");
+    const accountRef = db.collection("customerAccounts").doc(accountId);
+    const accountSnapshot = await accountRef.get();
+    if (accountSnapshot.exists && accountSnapshot.data().active !== false) {
+      const account = accountSnapshot.data();
+      let firebaseUser = await findFirebaseCustomer(email);
+      if (!firebaseUser) {
+        try {
+          firebaseUser = await customerFirebaseAuth.createUser({
+            email,
+            password: randomBytes(48).toString("base64url"),
+            displayName: String(account.name ?? "").slice(0, 120),
+          });
+        } catch (error) {
+          if (error.code === "auth/email-already-exists") firebaseUser = await findFirebaseCustomer(email);
+          else throw new HttpError(503, "Firebase could not prepare this account for password recovery.");
+        }
+      }
+      const result = await firebaseIdentityRequest("sendOobCode", { requestType: "PASSWORD_RESET", email });
+      if (!result.ok && result.code !== "EMAIL_NOT_FOUND") {
+        if (result.code === "OPERATION_NOT_ALLOWED") throw firebaseSignInError(result.code);
+        throw new HttpError(503, "Firebase could not send the password reset email. Check Firebase Authentication settings and try again.");
+      }
+      if (result.ok && firebaseUser) await markCustomerAsFirebaseAuth(accountRef, account);
+    }
+    return send(response, 200, { message: "If an account exists for that email, a password reset link has been sent." });
+  }
+
   if (segments[0] === "auth" && method === "POST" && ["signup", "signin"].includes(segments[1]) && segments.length === 2) {
     if (!customerSessionSecret()) return send(response, 503, { message: "Customer sign-in is not configured on the server. Configure CUSTOMER_SESSION_SECRET or ADMIN_SESSION_SECRET." });
+    if (!process.env.FIREBASE_WEB_API_KEY?.trim()) throw new HttpError(503, "Firebase Authentication is not configured. Set FIREBASE_WEB_API_KEY on the backend.");
     const body = await readJson(request);
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
@@ -255,17 +335,54 @@ async function handleApi(request, response, pathname) {
     let user;
     if (segments[1] === "signup") {
       if (!name || name.length > 120) throw new HttpError(400, "Enter your name (up to 120 characters).");
-      const credentials = passwordHash(password);
-      user = { name, email, ...credentials, active: true, cashOnDeliveryAllowed: true, createdAt: new Date().toISOString() };
-      try { await ref.create(user); } catch (error) {
+      const existingAccount = await ref.get();
+      if (existingAccount.exists) throw new HttpError(409, "An account with this email already exists. Sign in instead.");
+      let firebaseUser;
+      try {
+        firebaseUser = await customerFirebaseAuth.createUser({ email, password, displayName: name });
+      } catch (error) {
+        if (error.code === "auth/email-already-exists") throw new HttpError(409, "An account with this email already exists. Sign in instead.");
+        if (error.code === "auth/invalid-password") throw new HttpError(400, "Password must be at least 8 characters.");
+        throw new HttpError(503, "Firebase could not create the account. Check Firebase Authentication settings.");
+      }
+      user = { name, email, active: true, authProvider: "firebase", cashOnDeliveryAllowed: true, createdAt: new Date().toISOString() };
+      try {
+        await ref.create(user);
+      } catch (error) {
+        await customerFirebaseAuth.deleteUser(firebaseUser.uid).catch(() => {});
         if (error.code === 6 || error.code === "already-exists") throw new HttpError(409, "An account with this email already exists. Sign in instead.");
         throw error;
       }
     } else {
       const snapshot = await ref.get();
       const account = snapshot.data();
-      if (!account || !validPassword(password, account.salt, account.hash)) throw new HttpError(401, "Email or password is incorrect.");
+      if (!account) throw new HttpError(401, "Email or password is incorrect.");
       if (account.active === false) throw new HttpError(403, "This account has been disabled. Contact BelleFood support for help.");
+
+      let firebaseUser = await findFirebaseCustomer(email);
+      if (!firebaseUser) {
+        if (!account.salt || !account.hash || !validPassword(password, account.salt, account.hash)) {
+          throw new HttpError(401, "Email or password is incorrect.");
+        }
+        try {
+          firebaseUser = await customerFirebaseAuth.createUser({ email, password, displayName: String(account.name ?? "").slice(0, 120) });
+        } catch (error) {
+          if (error.code !== "auth/email-already-exists") throw new HttpError(503, "Firebase could not migrate this account. Please try again later.");
+          firebaseUser = await findFirebaseCustomer(email);
+        }
+      }
+
+      let authResult = await firebaseIdentityRequest("signInWithPassword", { email, password, returnSecureToken: true });
+      if (!authResult.ok && ["INVALID_PASSWORD", "INVALID_LOGIN_CREDENTIALS"].includes(authResult.code) && !account.authProvider && account.salt && account.hash && validPassword(password, account.salt, account.hash)) {
+        try {
+          await customerFirebaseAuth.updateUser(firebaseUser.uid, { password });
+          authResult = await firebaseIdentityRequest("signInWithPassword", { email, password, returnSecureToken: true });
+        } catch {
+          throw new HttpError(503, "Firebase could not migrate this account. Please try again later.");
+        }
+      }
+      if (!authResult.ok) throw firebaseSignInError(authResult.code);
+      await markCustomerAsFirebaseAuth(ref, account);
       user = { name: account.name, email: account.email, cashOnDeliveryAllowed: account.cashOnDeliveryAllowed !== false };
     }
     const sessionUser = { name: user.name, email: user.email };
